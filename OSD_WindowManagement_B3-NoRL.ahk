@@ -42,7 +42,7 @@
 ;;;            N - Kills all runelite windows without warning
 ;;;            H - Kills the window, any window, even explorer, that is under the cursor without warning.
 ;;;            
-;;;            Bladenote -> Capslock + Space to change to window management then -> 4 to make a window move like a DVD logo 5, stop all, A to focus, and S to return windows, R to Save locations
+;;;          
 ;;;
 
 ;########################;;########################;;########################;;########################;;########################;;########################;;########################;
