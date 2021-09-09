@@ -44,9 +44,30 @@ desktop and window management, various toolsets, HUD
   H - Kills the window, any window, even explorer, that is under the cursor without warning.
   
   
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
 
 ***It should go without saying, this script does not break jagex ToS.***
-----------------------------------------------------
+
 A6 - current.
 ----------------------------------------------------
 Nike'd the caps+H
@@ -67,7 +88,7 @@ Added Capslock + B, tick counter, Left Alt + B changes its display mode, Capsloc
 Added a gui specifically for debug messages, Capslock + U enables them.
 Various small optimizations, but didn't note them, IE. added GuiConF() which is a new function to handle GUI much better than before.
 
-----------------------------------------------------
+
 A503 513 - Depreciated
 ----------------------------------------------------
 
@@ -86,7 +107,7 @@ Added a sound that plays at the end of an Account specific timer
 If the file favicon.ico exists in the directory C:\Serbz_Multilog\ as C:\Serbz_Multilog\favicon.ico
     It will now be set as the script icon rather than the defaul AHK green bordered, white, capital, H.
 
-----------------------------------------------------
+
 A420, 421, 422 - Depreciated.
 ----------------------------------------------------
 
@@ -98,7 +119,7 @@ Changed the way GUI 1 is Hidden/Destroyed/Built to remove the blank ahk windows 
 Fixed the global timer not setting as ontop
 fixed not being able to reset the account specific timers
 
-----------------------------------------------------
+
 A418 - https://pastebin.com/m5ygrkaV
 ----------------------------------------------------
 
@@ -114,7 +135,7 @@ Every dialogue box should now open at the cursor position
 Added a delay to the reload for debugging reasons
 Added Mouse tooltips for functions that were missing them.
 
-----------------------------------------------------
+
 A332 - https://pastebin.com/TgypMUMx
 ----------------------------------------------------
 
@@ -123,7 +144,7 @@ Various bugs fixed with the timer, hiding displays, and messages
 Some more old hotkeys were removed
 The timer's reset key was merged with capslock Q
 
-----------------------------------------------------
+
 A330 - https://pastebin.com/TgypMUMx
 ----------------------------------------------------
 
@@ -135,7 +156,7 @@ Re-wrote timer, fixing bugs and adding color
 Added options to timer for window placement
 Added GUI 3, status messages
 
-----------------------------------------------------
+
 A120 & A121 - https://pastebin.com/eYrgizfQ <-121
 ----------------------------------------------------
 
