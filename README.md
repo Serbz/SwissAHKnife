@@ -1,4 +1,4 @@
-# SwissAHKKnife
+# SwissAHKnife
 desktop and window management, various toolsets, HUD
 *opt* some runelite functions for painting OSD names, assisting with window focus and placement geared towards people playing multiple accounts
 
@@ -51,15 +51,15 @@ desktop and window management, various toolsets, HUD
   
   
   
+    ----------------------------------------------------  ----------------------------------------------------  ----------------------------------------------------
   
+    ----------------------------------------------------  ----------------------------------------------------  ----------------------------------------------------
   
+    ----------------------------------------------------  ----------------------------------------------------  ----------------------------------------------------
   
+    ----------------------------------------------------  ----------------------------------------------------  ----------------------------------------------------
   
-  
-  
-  
-  
-  
+    ----------------------------------------------------  ----------------------------------------------------  ----------------------------------------------------
   
   
   
@@ -69,7 +69,7 @@ desktop and window management, various toolsets, HUD
 ***It should go without saying, this script does not break jagex ToS.***
 
 A6 - current.
-----------------------------------------------------
+---------------
 Nike'd the caps+H
 Created Temp variables in some for loops to prevent loops overlapping and causing some variables to change when they shouldn't
 Added searching for ontop windows to the reload function
