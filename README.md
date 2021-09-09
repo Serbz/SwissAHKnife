@@ -37,7 +37,7 @@ desktop and window management, various toolsets, HUD
    GLOBAL KEYS
   ----------------------------------------------------
    Capslock alone - Cycles through runelite window focus, priority on next account window if active else search for empty runelite (not logged in)
-  ;CAPSLOCK + 
+  CAPSLOCK + 
   B - Clears script settings, either all or all non-account settings    
   Y - Reloads the script
   N - Kills all runelite windows without warning
