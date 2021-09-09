@@ -3,9 +3,9 @@ desktop and window management, various toolsets, HUD
 *opt* some runelite functions for painting OSD names, assisting with window focus and placement geared towards people playing multiple accounts
 
 ;  Usage:  (required AHK v1.1.31+)
-
-
    Space - CHANGES THE KEY MODE !!! - Two modes, OSD or Window Management
+
+
   ----------------------------------------------------
    OSD MODE KEYS: CAPSLOCK + 
   ----------------------------------------------------
