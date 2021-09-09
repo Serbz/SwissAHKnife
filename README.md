@@ -6,9 +6,9 @@ desktop and window management, various toolsets, HUD
 
 
    Space - CHANGES THE KEY MODE !!! - Two modes, OSD or Window Management
-   
-   OSD MODE KEYS:
-  CAPSLOCK + 
+  ----------------------------------------------------
+   OSD MODE KEYS: CAPSLOCK + 
+  ----------------------------------------------------
   F - Changes the Capslock + Left/Right Mouse button and C key modes
  Left button creates, Right button offers options for existing interfaces, and C clears all interfaces.    
   X - Creates a tick counter, offers options if active to change style, remove the counter, or change the tick count limit.
@@ -21,9 +21,9 @@ desktop and window management, various toolsets, HUD
   A - Either counts the account specific counter up, or clears it - These are attached to nameplates, if nameplates are hidden these are too.
   Up, Down, Left, Right move the nameplates and attached displays on the runelite windows, these locations are saved.
    
-   
-   WINDOW MANAGEMENT KEYS:
-  CAPSLOCK + 
+  ----------------------------------------------------
+   WINDOW MANAGEMENT KEYS: CAPSLOCK + 
+  ----------------------------------------------------
   G - Launch a single runelite    
   A - Disable/enable a window under the cursor
   T - Disable/enable a single window that is focused (non runelite, very handy to use on the desktop, so accidentally right *FORBIDDEN_WORD*ing (c1ick) it is not possible)
@@ -33,8 +33,9 @@ desktop and window management, various toolsets, HUD
   W - Bring window opacity down
   E - Reset window opacity to 255 (opaque)
    
-   
+  ----------------------------------------------------   
    GLOBAL KEYS
+  ----------------------------------------------------
    Capslock alone - Cycles through runelite window focus, priority on next account window if active else search for empty runelite (not logged in)
   ;CAPSLOCK + 
   B - Clears script settings, either all or all non-account settings    
@@ -46,7 +47,7 @@ desktop and window management, various toolsets, HUD
 
 ***It should go without saying, this script does not break jagex ToS.***
 ----------------------------------------------------
-A6 - current. "Moving Forward"
+A6 - current.
 ----------------------------------------------------
 Nike'd the caps+H
 Created Temp variables in some for loops to prevent loops overlapping and causing some variables to change when they shouldn't
