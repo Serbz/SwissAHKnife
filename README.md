@@ -148,5 +148,5 @@ desktop and window management, various toolsets, HUD
 ;;;     Added GUI Controls
 ;;;     Added an initial setup for account names so it will work for not just me
 ;;;     Changed many static variabls to dynamic
-;;;     The twitch/obs timers are set to off by default
+;;;     The twitch/obs timers are set to off by default.
 ;;;     
