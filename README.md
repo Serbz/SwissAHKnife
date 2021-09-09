@@ -52,9 +52,17 @@ desktop and window management, various toolsets, HUD
 -  
 -  
 -  
--  
 
-A6 - current.
+B3 - current.
+---------------
+Changed all keybinds, 2-3 layers
+added macro builder
+mouse sets 1-3 do work, but are commented for now
+removed some things causing problems on tick counter
+restructured entire file, focused on responsiveness and as close to 0ms mouse accuracy as possible
+increased threads per hotkey and changed intervals
+
+A6.
 ---------------
 Nike'd the caps+H
 Created Temp variables in some for loops to prevent loops overlapping and causing some variables to change when they shouldn't
@@ -75,7 +83,7 @@ Added a gui specifically for debug messages, Capslock + U enables them.
 Various small optimizations, but didn't note them, IE. added GuiConF() which is a new function to handle GUI much better than before.
 
 
-A503 513 - Depreciated
+A503 513
 ----------------------------------------------------
 
 Account Specific timer functions operate on for loops, intialization of one now is a while loop.
@@ -94,7 +102,7 @@ If the file favicon.ico exists in the directory C:\Serbz_Multilog\ as C:\Serbz_M
     It will now be set as the script icon rather than the defaul AHK green bordered, white, capital, H.
 
 
-A420, 421, 422 - Depreciated.
+A420, 421, 422.
 ----------------------------------------------------
 
 Your usernames do not need to be entered at all anymore, your usernames are automatically added as played.
