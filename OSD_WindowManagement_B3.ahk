@@ -42,7 +42,7 @@
 ;;;            N - Kills all runelite windows without warning
 ;;;            H - Kills the window, any window, even explorer, that is under the cursor without warning.
 ;;;            
-;;;            Bladenote -> Capslock + Space to change to window management then -> 4 to make a window move like a DVD logo 5, stop all, A to focus, and S to return windows, R to Save locations
+;;;          
 ;;;
 
 ;########################;;########################;;########################;;########################;;########################;;########################;;########################;
@@ -165,11 +165,11 @@
     ;; The global timer will now audibly alert you.
 
 ;;;;#MaxThreadsPerHotkey 999
-;#MaxThreads 999
-;#MaxThreadsPerHotkey 99
+#MaxThreads 999
+#MaxThreadsPerHotkey 99
 ;;;#HotkeyInterval 500 ; This is the default value (milliseconds).
 #MaxHotkeysPerInterval 999
-;#MaxThreadsBuffer On
+#MaxThreadsBuffer On
 #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 #SingleInstance Force
 ;;;#ErrorStdOut
@@ -184,8 +184,6 @@ CoordMode, Mouse, Screen
 ;;Hotkey, Capslock & LButton, , T99
 SetMouseDelay, 0
 SetKeyDelay, 0
-GroupAdd, Runelite, ahk_class SunAwtFrame
-GroupAdd, RuneliteD, RuneLite
 SetWinDelay, 0
 IfExist, C:\Serbz_Multilog\
     FileMoveDir, C:\Serbz_Multilog\, C:\ProgramData\SerbzOSD, R
@@ -202,7 +200,7 @@ IfExist, %CS%favicon.ico
 
 
 
-P_WinUMID:=123
+P_WinUMID:=
 
 ;########################;;########################;;########################;
 ;########################;;######ACC SETUP#########;;########################;
@@ -228,134 +226,44 @@ NoAHKVars:=1
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;;-;-;-;-;-;-;-;-
 ;-;-;-;-;-;-; Number of accounts, and account names ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;;-;-;-;-;-;-;-;-
-Account := Object()
-NumAccs:=0
-Title:=
-AccCounter:=0
-NotExistCorrection:=0
-
-AccountRead:
-ifExist %CS%NumAccs.log
-{
-    FileRead, NumAccs, %CS%NumAccs.log
-    
-while (AccCounter<NumAccs) {
-    AccCounter++
-        ifExist %CS%Account%AccCounter%.log
-        {
-            FileRead, AccTempAdd, %CS%Account%AccCounter%.log
-            Account.Insert(AccTempAdd)
-        }
-    }
-    
-NumAccsCorrection:
-NumAccCounter:=NumAccs
-while (NotExistCorrection=0) {
-    NumAccCounter++
-    ifNotExist %CS%Account%NumAccCounter%.log
-    {
-        NotExistCorrection=1
-        NumAccCounter:=NumAccCounter-NotExistCorrection
-        break
-    }
-}
-while (NumAccs<=NumAccCounter) { 
-    NumAccs++
-    ifExist %CS%Account%NumAccs%.log
-        {
-            FileRead, AccTempAdd, %CS%Account%NumAccs%.log
-            Account.Insert(AccTempAdd)
-        } else {
-            NumAccs--
-            break
-        }
-    }
-} 
-            
-IfExist %CS%NumAccs.log
-    FileDelete, %CS%NumAccs.log
-FileAppend, %NumAccs%, %CS%NumAccs.log
 
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;;-;-;-;-;-;-;-;-
 ;-;-;-;-;-;-;-;-;-;-;-; Check for runelite directory  ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;;-;-;-;-;-;-;-;-
-ifNotExist, %CS%RuneLiteDir.log 
-{
-    SetTimer, MsgboxMove, on
-    MsgboxMove_String=Browse for Runelite
-    MsgBox, 4, %MsgboxMove_String%, Browse to runelite.exe?
-    IfMsgBox, Yes 
-    {
-        FileSelectFile, RuneLiteDir
-        FileAppend, %RuneLiteDir%, %CS%RuneLiteDir.log
-    }
-    IfMsgBox, No
-    {
-        NoRLDir:=1
-    }
-    goto AccPub2
-} else {
-    FileRead, RuneLiteDir, %CS%RuneLiteDir.log
-    goto AccPub2
-}
-AccPub2:
-If (RuneLiteDir:=) {
-    NoRLDir:=1
-}
+
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;;-;-;-;-;-;-;-;-
 ;-;-;-;-;-;-;-;-;-;-;-;-;-;-; Variable Initialization ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;;-;-;-;-;-;-;-;-
 MouseFollowMag:=0
 keyentercaps:=0
-TwitchMinimizeDisableControls:=0 ; -- See the Capslock:: function This will need fixed
-DisableWindowToggle2:=0
 CounterVar:=0
-CountWindow:=0
-osdfirst:=0
 counterkey:=0
 count_type:=0
 TimerIsRunning:=0
 cdvar:=0
-OBSTimer_Counter:=0
-OBSVar:=0
-P_PrintString:=000
-TwitcheqCounter:=0
-TimerIsRunning:=0
 capsTitle=
 colorswap:=0
 GlobalSecondDisplay:=0
 lastmanual:=0
 TimerIsPaused:=0
-TimerMouseT:=0
-OSD_MOVE:=0
-OSD_MOVE2:=0
 stopToggle:=0
-SaveWaitCounter:=0
 TimerResetWarning=0
-;TitleDis1:=
-;TitleDis2:=
 guidUnderCursorDumbDumbDumb:=
 TimerArrayMGetX:=0
-AccClear=0
 capsp_press:=0
-IsRunelite :=
 capsm_press:=0
 ChangeBtnNames:=0
 CounterFuncArray:=Object()
 AccountTimerCDownSec:=Array()
 GuiActiveArray:=Array()
-AccountTimerTotalSeconds:=Array()
-AccountTimerTotalSecondsMin:=Array()
-AccountTimerFloorTotalMin:=Array()
-ASTWindow:=Array()
-AccTimerTimeStr=Object()
+
 OnTopArray:=Array()
-AccTimersIsOnTopArray:=Array()
+wheelMouseClipval = a
 MarkerArrayY:=()
 MarkerArrayX:=Array()
 xz := Array()
 yz := Array()
-RLUID:=u
+RLUID:=
 Zy := Array()
 Zx := Array()
 ResX := Array()
@@ -374,14 +282,14 @@ WinName2:=Array()
 WinNameNW2:=Array()
 WinNameNH2:=Array()
 WinNameNoXW2:=Array()
-xmcoordArray:=[]
-ymcoordArray:=[]
 WinNameNoXY2:=Array()
 stopToggle2:=1
 DotCounter:=0
-mdelaycount:=50
-chaosDirection2:=Array()
+chaosDirection2:=Array()y
 chaosDirection:=Array()
+xmcoordArray:=Array()
+ordercoordArray:=Array()
+ymcoordArray:=Array()
 MagGUID:=0
 MagCounter:=0
 AccTimerTimeStr2:=
@@ -390,15 +298,6 @@ AccTimerMinFloor:=
 AccountGUIColor:=
 MgetY5T:=0
 MgetX5T:=0
-DisableWindowToggle1=0
-CapsTAccTimersCounter:=0
-AccTimersTimerCounter:=0
-NameCheck2:=
-AccountCheckName:=
-NameDisable:=
-AccColorWinChange=
-A_TitleCheck:=
-TimerArrayMGetY:=0
 3String=
 OutlineCounter:=0
 TockTockTickText:=
@@ -444,7 +343,7 @@ Gui, %GuiNUmber%: Hide
 }
 ;--------;--------;--------;--------
 WinBackTimerCounter:=0
-
+ClickCounterBoolean=True
 WinNameNoXW:=Array()
 WinNameNoXY:=Array()
 WinNameNW:=Array()
@@ -456,36 +355,58 @@ WinName:=Array()
     MarkersNotesMagnifiers:="Markers"
 stringyString:=
 clipBoardA:=Array()
-
 SetTimer, UpdateOSD, 500
 SetTimer, UpdateOSD, on
 SetTimer, UpdateOSD2, 1000
 SetTimer, UpdateOSD2, off
-SetTimer, SaveWait, 5000
-SetTimer, SaveWait, off
-SetTimer, AccTimers, 100
-SetTimer, AccTimers, off
 SetTimer, Three, 25
 SetTimer, Three, off
 SetTimer, 1fuckingsecondtimer, on
 SetTimer, TimersCheck, 500
 SetTimer, TimersCheck, on
-SetTimer, ActivateWinUM, 0
-SetTimer, ActivateWinUM, on
+;SetTimer, ActivateWinUM, 0
+;SetTimer, ActivateWinUM, off
 SetTimer, Repaint, off
 SetTimer, ChaosTimer, off
 output:=0
 clipCounter:=1
 MouseSetVar:=0
 notExistVar:=False
-msvVar:=0
-ordercoordArray := []
+
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+
+ifExist, %CS%ClickCounter.log
+{
+    fileRead, ClickCounter, %CS%ClickCounter.log
+} else { 
+    ClickCount:=0
+}
 
 
+AccDisable := Object()
+    for key in Acccount {
+        AccDisabled[key]:=0    
+    }
+AccDisabledIndex := % AccDisabled.MaxIndex()-1
+AccountIndex := % Account.MaxIndex()-1
 
-winset, region, , ahk_exe chrome.exe
 
-
+ifExist %CS%GlobalTimerMInutes.log
+{
+ FileRead, GlobalTimerMInutes, %CS%GlobalTimerMInutes.log
+ GlobalTotalSeconds:=GlobalTimerMInutes*60
+ GlobalSecondsDisplayInit:=GlobalTotalSeconds-1
+} else {
+GlobalTotalSeconds:=
+GlobalTimerMInutes:=
+GlobalSecondsDisplayInit:=
+}
 
 IfExist %CS%tickDisplaySetting.log
 {
@@ -495,6 +416,23 @@ if (tickDisplaySetting<1 or tickDisplaySetting>6 or !tickDisplaySetting) {
 tickDisplaySetting:=1
 }
 
+
+IfExist %CS%FFCH.log
+{
+    fileRead, FFCH, %CS%FFCH.log
+} else {
+MsgboxMove_String=Firefox or Chrome
+ChangeBtnNames:=1
+Btn1_Name=Firefox ; YES
+Btn2_Name=Chrome ; ELSE
+SetTimer, MsgboxMove, on
+MsgBox, 4, %MsgboxMove_String%, Choose a button:
+IfMsgBox, YES 
+    FFCH=Mozilla
+else 
+    FFCH=Chrome
+fileAppend, %FFCH%, %CS%FFCH.log
+}
 
 ifExist %CS%TimerIsPaused.log
     fileRead, TimerIsPaused, %CS%TimerIsPaused.log
@@ -527,31 +465,6 @@ ifExist %CS%GlobalSecondDisplay.log
     while (WaitJustOneFuckingSecond > 0)
      sleep,1
 	 
-	 ;;height:=725-640
-	 
-	 ;;winset, region,, ahk_class Chrome_WidgetWin_1
-	 ;;WinSet, Region, 50-0 W200 H250, ahk_class Notepad
-	 ;WinSet, TransColor,121212 , ahk_exe chrome.exe
-	 ;WinSet, TransColor,151515 255, ahk_exe chrome.exe
-	 ;WinSet, TransColor,161616 255, ahk_exe chrome.exe
-	 ;WinSet, TransColor,171717 255, ahk_exe chrome.exe
-	 
-	 ;WinSet, TransColor,171717 255, ahk_exe chrome.exe
-	 ;WinSet, TransColor,191919 255, ahk_exe chrome.exe
-	 clipLimit:=0
-
-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
-
-    
-    while (WaitJustOneFuckingSecond > 0)
-     sleep,1
-	 
 	 
 	 clipLimit:=0
 	 
@@ -580,10 +493,6 @@ return
 
 
 
-
-
-
-
 ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
 ;-;-;-;-;-;-;-;-;-;-;-;-;-;;-;-;-;-;-;-;-;-;-;-;;-;-;-;-;--;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
 ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;--;-;-;-;-;-;-;-;-;-;-;-;-;--;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
@@ -604,18 +513,18 @@ KeysSet:=2
 }
 return
 
-;~MButton & LButton::
-;keywait, MButton
-;keyWait, LButton
-;send, {MButton down}
-;send, {MButton up}
-;	3String = Mouse Set 1
-;	3Time:=40*2
-;	GuiConF(3,3,3String,-1)
-;	MouseSetVar:=1
-;	
-;return
-
+~MButton & LButton::
+keywait, MButton
+keyWait, LButton
+send, {MButton down}
+send, {MButton up}
+	3String = Mouse Set 1
+	3Time:=40*2
+	GuiConF(3,3,3String,-1)
+	MouseSetVar:=1
+return
+RButton::Rbutton
+MButton::MButton
 LCTRL & CAPSLOCK::
 keywait T
 xmcoordArray := []
@@ -677,8 +586,12 @@ ordercoordArray[counter+1]:=2
         GuiConF(3,3,3String,-1)
 return
 LCTRL & w::
-keywait W
+        3String=play
+        3Time:=40*2 ;; 40 = 1 second
+        GuiConF(3,3,3String,-1)
+keywait w
 send, {ctrl up}{w up}
+sleep, 150
 mousegetpos, xx2, yy2
 blockinput, on
 counter = 0
@@ -825,7 +738,17 @@ return
 
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
-
+#If MouseSetVar=100
+wheelDown::
+wheelMouseClipval = a
+wheelUp::
+gosub, wheelMouseClip
+return
+wheelMouseClip:
+blockinput, on
+fileAppend, %wheelMouseClipval%, %CS%InputWait.txt
+MouseSetVar := 1
+return
 #If MouseSetVar=1 
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
@@ -833,23 +756,22 @@ return
 
 MButton & LButton::
 send, {MButton up}
-	3String = Mouse Set 2
+	3String = Mouse Set 0
 	3Time:=40*2
 	GuiConF(3,3,3String,-1)
-	MouseSetVar:=2
+	MouseSetVar:=0
 return
 
 
 
-RButton::Rbutton
-MButton::MButton
-~MButton & RButton::
+
+RButton & MButton::
+wheelMouseClipval = s
 send, {MButton up}
+
         3String=MWheelUp: Remove&Save  --- WheelDown: Copy&Save
         3Time:=40*200 ;; 40 = 1 second
         GuiConF(3,3,3String,-1)
-
-
 sleep, 100 
 ifExist, %CS%InputWait.txt
 	fileDelete, %CS%InputWait.txt
@@ -860,12 +782,9 @@ while (MouseSetVar==100) {
 		break
 	sleep, 1
 }
-
-blockinput, on
 sleep 150
 blockinput, off
 fileRead, InputVar, %CS%InputWait.txt
-
 if (InputVar=="a")  {
 
 send, {ctrl down}
@@ -952,7 +871,7 @@ return
 
 clipboard := % clipBoardA[clipCounter] 
         strestwaers := % clipBoardA[clipCounter] 
-        3String=`[%clipCounter%`] - %strestwaers% - %clipLimit%
+        3String=`[%clipCounter%`] - %strestwaers%
         3Time:=40*1 ;; 40 = 1 second
         GuiConF(3,3,3String,-1)
 		
@@ -992,62 +911,6 @@ return
 #If KeysSet=1
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
-
-TimersCheck:
-if ((GUI2ActiveMouse!=0 or (3Time>=0) or tickHUD!=0 or Debug!=0)) {
-    SetTimer, Three, on
-} 
-if (Debug=1) {
-    if (DebugPriority<=1) {
-        DebugPriority:=1
-        DebugCycle++
-        if (DebugCycle=1) {
-            ;5String=X: GUI2ActiveMouse %GUI2ActiveMouse% - 3Time %3Time% - MouseMessages %MouseMessages%
-            randy:=Rand(1,2)
-            if randy=1
-                5String=`LALT `+ 3 `= record 1`-9 keys
-            if randy=2
-                5String=`LALT `+ 5 `= record mouse move event
-            if randy=3
-                5String=`LALT `+ 4 `= record ctrl`/shift`/alt down`/up
-            if randy=4
-                5String=`LALT `+ 2 `= record 2 second sleep
-            if randy=6
-                5String=`LALT `+ MButton `= record and send mouse click
-            if randy=5
-                5String=`LALT `+ U `= finalize macro
-                
-        } else if (DebugCycle=2) {
-        } else if (DebugCycle=3) {
-        } else if (DebugCycle=4) {
-        } else if (DebugCycle=5    ) {
-            
-            DebugCycle:=0
-            
-            
-
-            
-                
-            ;5String=X: tickHUD %tickHUD% - Debug %Debug% - RuneLite Window Count %RuneliteWindowCount% %RuneliteDWindowCount%
-        }
-    }
-    if (DebugPriority==9) {
-    5String=CPM: P %ClicksPerMinute% || TP %ClicksPerMinuteA%
-    }
-    
-    GuiRandColor(5)
-    GuiConF(5,3,5String,-1)
-}
-return
-
-;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
-;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
-#If KeysSet=1
-;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
-;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
-
-;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
-
 
 
 
@@ -1268,7 +1131,7 @@ if (counterPMM=1) {
     Zy[counterMM] := ResY[counterMM]/zoom
     x2[counterMM] := Rx2-Zx[counterMM]-(rx/zoom)
     y2[counterMM] := Ry2-Zy[counterMM]
-    SetTimer Repaint, 5
+    SetTimer Repaint, 50
     setTimer, Repaint, on
 }
 return
@@ -1402,18 +1265,7 @@ if (tickHUD=1) {
     ifExist, %CS%tickLimit.log
         fileDelete, %CS%tickLimit.log
     fileAppend, %tickLimit%, %CS%tickLimit.log
-    } ;if(Outputvar="3") {
-        ;if (tickDisplaySetting=1 or tickDisplaySetting>3 or tickDisplaySetting<1) {
-        ;    tickDisplaySetting:=2
-        ;} else if (tickDisplaySetting=2) {
-        ;    tickDisplaySetting:=3
-        ;} else if (tickDisplaySetting=3) {
-        ;    tickDisplaySetting:=1
-        ;}
-        ;ifExist, %CS%tickDisplaySetting.log
-        ;    fileDelete, %CS%tickDisplaySetting.log
-        ;fileAppend, %tickDisplaySetting%, %CS%tickDisplaySetting.log
-    ;}
+    } 
 } else {
     tickHUD:=1
 boredCounter:=1
@@ -1443,8 +1295,6 @@ setTimer, tickHUD, on
     TickCurDisplayHeight:=tickMonArray[5]
     TickCurDisplayY:=tickMonArray[1]
     TickCurDisplayX:=tickMonArray[2]
-    ;MonArray := [TDISPLAYY,TDISPLAYX,TDISPLAYY2,TDISPLAYX2,TDISPLAYHeight,TDISPLAYWidth]        
-    ;WinMove A, , % (MonArray[2] + MonArray[6]/2)-NOWidth/2, % (MonArray[4] + MonArray[5]/2)-NOHeight/2
     }
     tickTryAgain:
     ifNotExist, %CS%tickLimit.log
@@ -1469,34 +1319,11 @@ setTimer, tickHUD, on
 return
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
 Capslock & Z::
-    3String=Z again to stick/unstick these messages, 1 to hide/show these messages, 2 to hide/show nameplates
+    3String=Z again to stick/unstick these messages, 1 to hide/show these messages
     3Time:=40*5 ;; 40 = 1 second
     GuiConF(3,3,3String,-1)
     Input, Outputvar, L1 T5
-    if(Outputvar="2") {
-        if (GUI_Names=0) {
-        WinGetActiveTitle, aTitleZ
-                3String=OSD Name plates are now being shown
-                3Time:=40*2 ;; 40 = 1 second
-                GuiConF(3,3,3String,-1)
-            GUI_Names=1
-            FileDelete, %CS%GUI_Names.log
-            FileAppend, %GUI_Names%, %CS%GUI_Names.log
-            GuiNumber:=1
-            O_Title:=NaN
-            GoSub, UpdateOSD
-            WinActivate, %aTitleZ%
-            return
-        } else {
-                3String=OSD Name plates are now being hidden
-                3Time:=40*2 ;; 40 = 1 second
-                GuiConF(3,3,3String,-1)
-                GUI_Names=0
-            FileDelete, %CS%GUI_Names.log
-            FileAppend, %GUI_Names%, %CS%GUI_Names.log
-            GuiConF(1,2,-1,-1)
-        }    
-    } else if (Outputvar="1") {
+ if (Outputvar="1") {
         if (MouseMessages=0) {
             MouseMessages:=1
                 3String=These messsages are now being shown
@@ -1532,29 +1359,7 @@ stopThreeGo:=0
     }
 return
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
-Capslock & r:: ;-------- Toggles the timer OSD being always attached to the mouse cursor or not
-TimerMouseT++
-if (TimerMouseT>=3) {
-TimerMouseT:=0
-}
-if (TimerMouseT=1) {
-        3String=Timer stuck runelites unless runelites inactive
-        3Time:=40*2 ;; 40 = 1 second
-        GuiConF(3,3,3String,-1)
-        GUI2ActiveMouse:=1
-} else if (TimerMouseT=0) { 
-        3String=Timer stuck to cursor always
-        3Time:=40*2 ;; 40 = 1 second
-        GuiConF(3,3,3String,-1)
-        GUI2ActiveMouse:=1
-} else if (TimerMouseT=2) {
-            3String=Timer stuck to runelites always
-        3Time:=40*2 ;; 40 = 1 second
-        GuiConF(3,3,3String,-1)
-}
-    FileDelete, %CS%TimerMouseT.log
-    FileAppend, %TimerMouseT%, %CS%TimerMouseT.log
-return
+
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
     Capslock & w::
     Keywait, w
@@ -1604,9 +1409,7 @@ return
             TimerIsRunning:=1
             TimerIsPaused:=0
             SetTimer, UpdateOSD2, on
-            if (TimerMouseT!=2) {
-                GUI2ActiveMouse:=1
-            }
+
             3String=Timer Resumed
             3Time:=40*1 ;; 40 = 1 second
             GuiConF(3,3,3String,-1)
@@ -1617,14 +1420,7 @@ return
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
 caps_f:
 Outputvar:=2
-goto skipinput_timers
 capslock & e::
-    3String=Press 1 to set global timer time, 2 to set account specific timer time
-    3Time:=40*5 ;; 40 = 1 second
-    GuiConF(3,3,3String,-1)
-    Input, Outputvar, L1 T5
-    skipinput_timers:
-    if(Outputvar="1") {
 if (WaitJustOneFuckingSecond>=0) {
     3String=Please Wait
     3Time:=40*1 ;; 40 = 1 second
@@ -1642,100 +1438,10 @@ if (WaitJustOneFuckingSecond>=0) {
         GuiConF(3,3,3String,-1)
     }
 }
-} else if (Outputvar="2") {
-WinGetActiveTitle, aTitleT
-MouseGetPos, TheBootesVoidIsAnInterestingObjectFoundInSpaceWellTheLackOfAnObjectReallyItsPitchBlackDark, TheresLotsOfWaysToExplainItButMyFavoriteIsThatASuperAdvancedAlienRaceOrAIisBuildingDysonSpheres
-                FUCKX:=TheBootesVoidIsAnInterestingObjectFoundInSpaceWellTheLackOfAnObjectReallyItsPitchBlackDark-105
-                FUCKY:=TheresLotsOfWaysToExplainItButMyFavoriteIsThatASuperAdvancedAlienRaceOrAIisBuildingDysonSpheres-20
-                InputBox, AccTimerTime, Timer Time, Enter the number of minutes, , 210, 130, FUCKX, FUCKY
-                IfExist, %CS%AccTimerTime.log
-                    FileDelete, %CS%AccTimerTime.log
-                FileAppend, %AccTimerTime%, %CS%AccTimerTime.log
 
-                If (!AccTimerTime or AccTimerTime<=0)
-                    {
-                        CapsTAccTimersCounter:=0
-                        3String=No Time was entered, dumb idiot
-                        3Time:=40*1 ;; 40 = 1 second
-                        GuiConF(3,3,3String,-1)
-                        return
-                    } else {
-                        if (CapsTAccTimersCounter!=0) {
-                            CapsTAccTimersCounter:=0
-                            WinActivate, %aTitleT%
-                            
-                            goto caps_ast
-                        }
-                        CapsTAccTimersCounter:=0
-                    }        
-} else {
-    3String=Canceled.
-    3Time:=40*2 ;; 40 = 1 second
-    GuiConF(3,3,3String,-1)
-}
 return
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
-Capslock & t::
-caps_ast:
-ifExist, %CS%AccTimerTime.log
-    FileRead, AccTimerTime, %CS%AccTimerTime.log
-if(CapsTAccTimersCounter!=0)
-    return
-while (CapsTAccTimersCounter<=NumAccs) {
-WinGetActiveTitle, aTitleT
-    CapsTAccTimersCounter++
-    AccTimerAcc = % Account[CapsTAccTimersCounter]
-        
-        If (aTitleT="RuneLite - "AccTimerAcc) {
-            if (!AccountTimerTotalSeconds[CapsTAccTimersCounter]) {
-                If (!AccTimerTime)
-                    {
-                        goto caps_f
-                    }
-                GuiNumber:=CapsTAccTimersCounter+NumAccs
-                OutlineCounter:=0
-                OutlineID=%GuiNumber%Outline
-                OOutlineID:=OutlineID
-                OutlineBuilder(GuiNumber)
-                BuildGUI(GuiNumber)
-                GuiNumber:=CapsTAccTimersCounter+NumAccs
-                3String=Starting Timer for %AccTimerAcc%
-                3Time:=40*1 ;; 40 = 1 second
-                GuiConF(3,3,3String,-1)
-                ASTWindow[CapsTAccTimersCounter]:=aTitleT
-                AccountTimerTotalMinutes[CapsTAccTimersCounter]:=AccTimerTime
-                AccountTimerTotalSeconds[CapsTAccTimersCounter]:= AccTimerTime*60
-                AccountTimerCDownSec[CapsTAccTimersCounter]:=60
-                CapsTAccTimersCounter:=0
-                SetTimer, AccTimers, on
-                break
-                return
-            } else {
-                GuiNumber:=CapsTAccTimersCounter+NumAccs
-                OutlineID=%GuiNumber%Outline
-                GuiConF(GuiNumber,2,-1,-1)
-                AccountTimerTotalSeconds.RemoveAt(CapsTAccTimersCounter)
-                AccountTimerTotalSecondsMin.RemoveAt(CapsTAccTimersCounter)
-                AccountTimerFloorTotalMin.RemoveAt(CapsTAccTimersCounter)
-                AccountTimerCDownSec.RemoveAt(CapsTAccTimersCounter)
 
-                3String=Timer Cleared for %AccTimerAcc%
-                3Time:=40*1 ;; 40 = 1 second
-                GuiConF(3,3,3String,-1)
-                CapsTAccTimersCounter:=0
-                break
-                return
-            }
-        } else if (CapsTAccTimersCounter=>NumAccs) {
-            3String=Please focus a runelite window that has a configured account name in the title.
-            3Time:=40*1 ;; 40 = 1 second
-            GuiConF(3,3,3String,-1)
-            CapsTAccTimersCounter:=0
-            break
-            return
-        }        
-    }
-return
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
 Capslock & q::
 Keywait, q
@@ -1765,9 +1471,7 @@ if (TimerIsRunning=0 and TimerIsPaused=0) {
     TimerResetWarning:=0
     GoSub, UpdateOSD2
     SetTimer, UpdateOSD2, on
-    if (TimerMouseT!=2){
-        GUI2ActiveMouse:=1
-    }
+
     if (NoAHKVars=0) {
         ifExist, E:\rsahkvars\TimerCleared.log
         {
@@ -1831,25 +1535,7 @@ if (!CounterFuncArray[count_type]) {
     }
 return
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
-Capslock & Right::
-OSD_MOVE:=OSD_MOVE+25
-goto osdmovekeysavewait
-Capslock & Left::
-OSD_MOVE:=OSD_MOVE-25
-goto osdmovekeysavewait
-Capslock & Up::
-OSD_MOVE2:=OSD_MOVE2-25
-goto osdmovekeysavewait
-Capslock & Down::
-OSD_MOVE2:=OSD_MOVE2+25
-goto osdmovekeysavewait
-;----------
-osdmovekeysavewait:
-if (SaveWaitCounter<=0) {
-    SaveWaitCounter=6
-    SetTimer, SaveWait, on
-}
-return
+
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
 #If KeysSet=2
@@ -1857,23 +1543,23 @@ return
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
 
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
-Capslock & u::  ;;;;;;    <--- This is to toggle on/off the automatic window focus of runelite under the cursor
-Keywait, x
-    FileDelete, %CS%ActiveToggle.log
-    FileAppend, %ActiveToggle%, %CS%ActiveToggle.log
-            3String=No longer activating runelites under cursor
-        3Time:=40*2 ;; 40 = 1 second
-        GuiConF(3,3,3String,-1)
-if (ActiveToggle=1) {
-ActiveToggle:=0
-SetTimer, ActivateWinUM, off
-} else {
-            3String=Activating runelites under cursor
-        3Time:=40*2 ;; 40 = 1 second
-        GuiConF(3,3,3String,-1)
-ActiveToggle:=1
-SetTimer, ActivateWinUM, on
-}
+;Capslock & u::  ;;;;;;    <--- This is to toggle on/off the automatic window focus of runelite under the cursor
+;Keywait, u
+;    FileDelete, %CS%ActiveToggle.log
+;    FileAppend, %ActiveToggle%, %CS%ActiveToggle.log
+;            3String=No longer activating runelites under cursor
+;        3Time:=40*2 ;; 40 = 1 second
+;        GuiConF(3,3,3String,-1)
+;if (ActiveToggle=1) {
+;ActiveToggle:=0
+;SetTimer, ActivateWinUM, off
+;} else {
+;            3String=Activating runelites under cursor
+;        3Time:=40*2 ;; 40 = 1 second
+;        GuiConF(3,3,3String,-1)
+;ActiveToggle:=1
+;SetTimer, ActivateWinUM, on
+;}
 return
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
 ;-------------------;-------------------;-------------------;
@@ -1907,25 +1593,10 @@ WinActivate, ahk_class Shell_TrayWnd
 GuiConF(3,3,3String,-1)
 return
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
-;Capslock & t::
-;if (DisableWindowToggle2=0 or DisableWindowToggle2=4) { 
-;DisableWindowToggle2:=2
-;WinGetActiveTitle, TitleDis2
-;Winset, disable, , A    
-;    3String=Window %TitleDis2% Disabled interaction.
-;    3Time:=40*1 ; 40 is one second
-;    GuiConF(3,3,3String,-1)
-;} else if (DisableWindowToggle2=2) {
-;DisableWindowToggle2:=4
-; Winset, enable, , %TitleDis2%
-;     3String=Window %TitleDis2% Enabled interaction.
-;    3Time:=40*1 ; 40 is one second
-;    GuiConF(3,3,3String,-1)
-; TitleDis2:=
-; }
-;return
+
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
-Capslock & Q:: ;;window ontop or not
+RButton & WheelDown:: ;;window ontop or not
+keywait, RButton
 WinGetTitle, A_Title, A
     if (OnTopArray[A_Title]=1) {
     WinSet, AlwaysOnTop, Off, A
@@ -1940,7 +1611,6 @@ WinGetTitle, A_Title, A
     3String=Always Ontop - ON - for %A_Title%
     3Time:=40*1 ; 40 is one second
     GuiConF(3,3,3String,-1)
-    ;    prevent when a window is ontop, from the gui getting stuck under it
 for GuiKeyCheck, GuiValueCheck in GuiActiveArray {
     if instr(GuiKeyCheck,"Outline") { 
         Gui, %GuiKeyCheck%: +AlwaysOntop
@@ -1954,74 +1624,7 @@ for GuiKeyCheck, GuiValueCheck in GuiActiveArray {
 }
 return
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
-Capslock & R:: ;;save or move to saved positions
-CounterWinBack2:=0
-CounterWinBack:=0
-CounterWinBack3:=0
-CounterWinBack4:=0
-chaosBounce:=0
-KeyCount:=0
-setTimer, ChaosTimer, off
-    for key, val in ChaosWindowGUIDArray { 
-        KeyCount++
-    }
-    while (KeyCount>1) {
-        ChaosWindowGUIDArray.removeat(KeyCount)
-        KeyCount--
-    }
-GroupAdd, RuneliteD, RuneLite
-;GroupAdd, RuneliteSAF, ahk_class SunAwtFrame
-WinGet, RuneliteDWindowCount, Count, ahk_group RuneliteD
-;WinGet, RuneliteDWindowCountSAF, Count, ahk_group RuneliteD
-;msgbox % RuneliteDWindowCount RuneliteDWindowCountSAF
-WindowPosSetCounter:=0
-moveWins:=0
-MsgboxMove_String=Move or Save
-ChangeBtnNames:=1
-Btn1_Name=Move ; YES
-Btn2_Name=Save ; ELSE
-SetTimer, MsgboxMove, on
-MsgBox, 4, %MsgboxMove_String%, Would you like to Move to your saved window positions, or save the current window positions?
-ifMsgBox, YES
-{
-moveWins:=1
-} 
-while (WindowPosSetCounter<=RuneliteDWindowCount) {
-    WindowPosSetCounter++
-    GroupActivate, RuneliteD, r
-    WinGetActiveStats, yTitle, ywWidth, ywHeight, yWX, yWY
-    
-    If (moveWins=1) {
-        ifExist, %CS%_%yTitle%_Settings.log
-        {
-                SaveyTitle=%yTitle%
-            fileRead, settingsString, %CS%_%yTitle%_Settings.log
-            settingsObject2 := StrSplit(settingsString, "|")
-            WinMove A, , % settingsObject2[1], % settingsObject2[2], % settingsObject2[3], % settingsObject2[4]
-        }
-    } else { 
-            ifExist, %CS%_%yTitle%_Settings.log
-        {
-            fileRead, settingsString, %CS%_%yTitle%_Settings.log
-            settingsObject := StrSplit(settingsString, "|")
-            if (( yWX!=settingsObject[1] or yWY!=settingsObject[2] or ywWidth!=settingsObject[3] or ywHeight!=settingsObject[4] )) {
-                fileDelete, %CS%_%yTitle%_Settings.log
-                fileAppend, %yWX%|%yWY%|%ywWidth%|%ywHeight%, %CS%_%yTitle%_Settings.log
-            }
-        } else {
-        if (yTitle="Runelite") {
-        WinGet, RLUID , ID
-            3String :=  RLUID
-3Time:=40*10 ; 40 is one second
-GuiConF(3,3,3String,-1)
-            fileAppend, %SaveString%, %CS%_%RLUID%_Settings.log
-        }
-            fileDelete, %CS%_%yTitle%_Settings.log
-            fileAppend, %yWX%|%yWY%|%ywWidth%|%ywHeight%, %CS%_%yTitle%_Settings.log
-        }
-    }
-}
-return
+
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
 CapsLock & d::
 Keywait, d
@@ -2055,7 +1658,6 @@ if (newtrans>0) {
 }
 return
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
-
 Capslock & E::
 WinGetActiveTitle, aTitle5
 WinGet, curtrans, Transparent, A
@@ -2073,7 +1675,7 @@ if (newtrans>0) {
     GuiConF(3,3,3String,-1)
     WinSet, Transparent, 255, A
     WinSet, Transparent, OFF, A
-	}
+}
 return
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
 Capslock & C::
@@ -2090,16 +1692,7 @@ return
 #If KeysSet=1 or KeysSet=2 or !KeySet
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
-Capslock & l::
-;;Capslock & G::
-    3String=Launching Runelite...
-    3Time:=40*2 ;; 40 = 1 second
-    GuiConF(3,3,3String,-1)
-Keywait, G
-if (NoRLDir!=1) {
-    Run %RuneLiteDir%
-}
-return
+
 
 
 capslock & 5::
@@ -2128,7 +1721,7 @@ for key, val in ChaosWindowGUIDArray {
         return
     }
 }
-SetTimer, ActivateWinUM, off
+;SetTimer, ActivateWinUM, off
 sleep 50
 CounterWinBack2++
 CounterWinBack3++
@@ -2141,6 +1734,13 @@ winActivate, ahk_ID %ChaosWindowGUID%
         WinNameNoXW[CounterWinBack2]:=NoXW
         WinNameNoXY[CounterWinBack2]:=NoXY
         MonArray:=monitorFunc()
+;	for each, val in MonArray {
+;		3String = %val% 
+;    3Time:=40*3 ; 40 is one second
+;    GuiConF(3,3,3String,-1)
+;	sleep 3000
+;	}
+
 ;MonArray := [TDISPLAYY,TDISPLAYX,TDISPLAYY2,TDISPLAYX2,TDISPLAYHeight,TDISPLAYWidth]
 
 for key, val in MonArray {
@@ -2208,10 +1808,9 @@ return
 
 Capslock & A::
 CapsA:
-SetTimer, ActivateWinUM, off
+;SetTimer, ActivateWinUM, off
     sleep 50
     donesubcapsa:=1
-    GoSub do_capslock
     CounterWinBack++
     while (donesubcapsa=1)
         sleep 1
@@ -2219,14 +1818,7 @@ WinGet, ChaosWindowGUID , ID
 stopToggle:=ChaosWindowGUID
         WinGetActiveStats, TitleNO2, NOWidth2, NOHeight2, NoXW2, NoXY2    
 
-if (chaosBounce!=1){
-        for key, val in WinName2 {
-            if (val=TitleNO2) {
-                goto Caps_S
-                ;goto Caps_S
-            }
-        }
-    }
+
         WinName2[CounterWinBack]:=TitleNO2
         WinNameNW2[CounterWinBack]:=NOWidth2
         WinNameNH2[CounterWinBack]:=NOHeight2
@@ -2254,85 +1846,12 @@ coordmode, mouse, screen
 BlockInput, off
 return        ;;;;
 
-Capslock & S::
-Caps_S:
-    for key, val in WinName2 {
-        WinMove %val%, , % WinNameNoXW2[key], % WinNameNoXY2[key], % WinNameNW2[key], % WinNameNH2[key]
-    }
-    CounterWinBack:=0 
-    WinBackTimerCounter:=0
-    WinName2:=Array()
-    WinNameNW2:=Array()
-    WinNameNH2:=Array()
-    WinNameNoXW2:=Array()
-    WinNameNoXY2:=Array()
-    MonArray2:=Array()
-    stopToggle:=0
-return
+
 ;;;;; APACHE PHP BROWSER BOT PARSE PAGES VIA PHP 
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
-Capslock & N::
-    3String=preparing to shutdown down all runelites...
-    3Time:=40*7 ;; 40 = 1 second
-    GuiConF(3,3,3String,-1)
-soundplay, C:\CustomSound\godno.wav, wait
-sleep 7
-    3String=Shutting down all runelites!
-    3Time:=40*2 ;; 40 = 1 second
-    GuiConF(3,3,3String,-1)
-Run cmd.exe /c taskkill /f /im "runelite.exe"
-return
+
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
-Capslock & enter::
-Send, {enter} 
-$Capslock::
-do_capslock:    
-WinGetActiveTitle, capsTitle
-capsTitle:= % SubStr(capsTitle, 12)
-valuesinaccount:=0
-CurrentAccKey:=-1
-for precapskey in Account {
-    valuesinaccount++
-    if (Account[precapskey]=capsTitle)
-        CurrentAccKey:=valuesinaccount
-}
-ifWinNotExist, % LastFocused 
-{
-checklastfocused:=0
-GroupActivate, Runelite, r
-return
-}
-if (CurrentAccKey=-1) {
-LastFocusedName:=Substr(LastFocused,12)
-for precapskey2 in Account {
-    if (Account[precapskey]=LastFocusedName)
-        CurrentAccKey:=valuesinaccount
-}
-}
-if(CurrentAccKey=valuesinaccount){
-NextKeyCaps:=0
-} else {
-NextKeyCaps:=CurrentAccKey
-}
-while (True) {
-    NextKeyCaps++
-    NextAccount = % Account[NextKeyCaps]
-    if (NextKeyCaps = CurrentAccKey) {
-        GroupActivate, Runelite, r
-        break
-    }
-    ifWinExist, % "RuneLite - "NextAccount
-    {
-        WinActivate, % "RuneLite - "NextAccount
-        break
-    }
-    if (NextKeyCaps>=valuesinaccount) {
-         NextKeyCaps:=0
-    }
-}
-donesubcapsa:=0
-GoSub, UpdateOSD
-return
+
 
 WinBack:
 WinBackTimerCounter++
@@ -2447,8 +1966,7 @@ if (capsm_press=2 or capsp_press=2) {
         fileDelete, %CS%GlobalTimerMinR.log
     ifExist %CS%GlobalSecondDisplay.log
         fileDelete, %CS%GlobalSecondDisplay.log
-    ifExist %CS%TimerMouseT.log
-        fileDelete, %CS%TimerMouseT.log
+
     ifExist %CS%ActiveToggle.log
         fileDelete, %CS%ActiveToggle.log
     ifExist %CS%GUI_Names.log
@@ -2625,6 +2143,14 @@ if (GuiNumber) {
     color = % Format("{:06X}", vRand)
     GuiControl, +c%color%, MyText
 }
+}
+GuiWhiteColor(GuiNumber) {
+if (GuiNumber) {
+    Gui, %GuiNumber%: Default
+    ;Random, vRand, 0x33DE10, 0x33DF10
+    ;color = % Format("{:06X}", vRand)
+    GuiControl, +cWhite, MyText
+}
     return
 }
 RandomStr(l = 16, i = 48, x = 122) { ; length, lowest and highest Asc value
@@ -2653,6 +2179,7 @@ MonArray:=Array()
                     TDISPLAYWidth  := curMonRight  - curMonLeft
                     
 MonArray := [TDISPLAYY,TDISPLAYX,TDISPLAYY2,TDISPLAYX2,TDISPLAYHeight,TDISPLAYWidth]
+;msgbox, % TDISPLAYY " " TDISPLAYX  " "   TDISPLAYY2  " "   TDISPLAYX2  " "   TDISPLAYHeight  " "   TDISPLAYWidth
             }
         }
 
@@ -2888,7 +2415,32 @@ Even(n)
 
 ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
 ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
-
+TimersCheck:
+if ((GUI2ActiveMouse!=0 or (3Time>=0) or tickHUD!=0 or Debug!=0)) {
+    SetTimer, Three, on
+} 
+if (Debug=1) {
+    if (DebugPriority<=1) {
+        DebugPriority:=1
+        DebugCycle++
+        if (DebugCycle=1) {
+            5String=X: GUI2ActiveMouse %GUI2ActiveMouse% - 3Time %3Time% - MouseMessages %MouseMessages%
+        } else if (DebugCycle=2) {
+            DebugCycle:=0
+            5String=X: tickHUD %tickHUD% - Debug %Debug% - RuneLite Window Count %RuneliteWindowCount% %RuneliteDWindowCount%
+        }
+    }
+    if (DebugPriority=10) {
+    5String=A Add to clipboard, S remove from clipboard, Caps + scroll up/down select saved
+    GuiWhiteColor(5)
+    } else {
+    
+    GuiRandColor(5)
+    
+    }
+    GuiConF(5,3,5String,-1)
+}
+return
 ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
 ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
 Three:
@@ -2929,8 +2481,7 @@ if (tickHUD=1 and tickLimit!=NaN) {
             GuiConF(4,1,4ThreeX,4ThreeY)
 } else if (tickDisplaySetting=2) {
 
-        ;4ThreeX:=floor((TDISPLAYWidth/2)+boredCounter+TDISPLAYX)
-        ;4ThreeY:=floor((TDISPLAYHeight/2)-boredCounter2+TDISPLAYY)
+
         if (initTick>=1 and tickHUD=1) {
             if (boredCounter>=(TDISPLAYWidth/2)-50) {
                 boredDirection:=Rand(-1.5,-0.5)
@@ -2987,18 +2538,7 @@ if ((GUI2ActiveMouse=0 and 3Time<0 and tickHUD=0 and Debug=0)) {
 return
 
 
-SaveWait:
-SaveWaitCounter--
-if (SaveWaitCounter<=0) {
-    SetTimer, SaveWait, off
-    ifExist, %CS%OSD_MOVE2.log
-        fileDelete, %CS%OSD_MOVE2.log
-    ifExist, %CS%OSD_MOVE.log
-        fileDelete, %CS%OSD_MOVE.log
-    fileAppend, %OSD_MOVE%, %CS%OSD_MOVE.log
-    fileAppend, %OSD_MOVE2%, %CS%OSD_MOVE2.log
-}
-return
+
 SaveWait2:
 SaveWaitCounter2--
 if (SaveWaitCounter2<=0) {
@@ -3117,29 +2657,31 @@ return
 ;                    If window under mouse                    ;
 ;                is a runelite window, make it active.        ;
 ;-------------------;-------------------;------
-ActivateWinUM:
-    MouseGetPos,,, WinUMID
-if (WinUMID!=P_WinUMID) {
-        P_WinUMID=%WinUMID%
-        MouseGetPos,,,,WinCLASS
-        WinGetClass, P_WinCLASS, A
-        ;DebugPriority:=7
-        ;5String:= % P_WinCLASS
-    if(WinCLASS="SunAwtCanvas2" and P_WinCLASS="SunAwtFrame") {
-    WinGetTitle, titleMPOS, ahk_id %WinUMID%
-        for key, value in WinDisable {
-            if (value=titleMPOS) {
-                3Time:=20 ; 40 is one second
-                GuiConF(3,3,"Window Disabled",-1)
-                return
-            }
-        }
-            WinActivate, ahk_id %WinUMID%
-            
-        
-}
-
-}
+;ActivateWinUM:
+;if (IsRunelite=1) {
+;    MouseGetPos,,, WinUMID
+;if (WinUMID!=P_WinUMID) {
+;        P_WinUMID=%WinUMID%
+;        MouseGetPos,,,,WinCLASS
+;        WinGetClass, P_WinCLASS, A
+;        ;DebugPriority:=7
+;        ;5String:= % P_WinCLASS
+;    if(WinCLASS="SunAwtCanvas2" and P_WinCLASS="SunAwtFrame") {
+;    WinGetTitle, titleMPOS, ahk_id %WinUMID%
+;        for key, value in WinDisable {
+;            if (value=titleMPOS) {
+;                3Time:=20 ; 40 is one second
+;                GuiConF(3,3,"Window Disabled",-1)
+;                return
+;            }
+;        }
+;            WinActivate, ahk_id %WinUMID%
+;            
+;        
+;} ; else if (WinCLASS and WinCLASS!="") {
+; sleep 200
+;}
+;}
 
 return
 ;-------------------------------------;-------------------------------------;-------------------------------------
@@ -3156,10 +2698,7 @@ UpdateOSD:
         GuiConF(3,3,3String,-1)
     }
 }
-O_Title = %Title%
 WinGetActiveTitle, Title 
-if(O_Title!=Title) {
-        WinMatch:=0
         
 ;    prevent when a window is ontop, from the gui getting stuck under it
 if (OnTopArray[Title]=1) {
@@ -3180,94 +2719,12 @@ OnTopArray[Title]:=2
  if OnTopArray[O_Title]=2 {
     OntopArray[O_Title]:=1
 }
-IsRunelite := % RegExMatch(StrReplace(Title,"Runelite - ","RLWINDOW"),"RLWINDOW(.*)")
-if (IsRunelite=1) {
-NameCheck1 := % SubStr(Title, 12)
-if !NameCheck1
-    return
-        NameKnown:=0
-        WinChangeCounterColor:=0
-        ;#########
-        for AccKey, AccValue in Account {
-            if (NameCheck1=AccValue) {
-                NameKnown:=1
-                    LastFocused:=Title
-                    WinChangeCounterColor:=AccKey
-                    if (CounterFuncArray[AccKey]) {
-                        counterkey=% CounterFuncArray[AccKey]
-                    } else {
-                        counterkey:=
-                    }
-                    WinMatch:=1
-                break
-            }  
-        }
-        if (NameKnown!=1) {                
-            ifExist %CS%NumAccs.log
-                    FileDelete, %CS%NumAccs.log
-                NumAccs++
-                fileAppend, %NumAccs%, %CS%NumAccs.log
-                ifExist %CS%Account%NumAccs%.log
-                    FileDelete, %CS%Account%NumAccs%.log
-                fileAppend, %NameCheck1%, %CS%Account%NumAccs%.log
-                Account.Insert(NameCheck1)
-                AccountIndex := % Account.MaxIndex()-1
-                return
-        }
-        While (WinChangeCounterColor>6) {
-                        WinChangeCounterColor:=WinChangeCounterColor-6
-                    }
-                    if (WinChangeCounterColor=1) {
-                        AccColorWinChange=White
-                    } else if (WinChangeCounterColor=2) {
-                        AccColorWinChange=Lime
-                    } else if (WinChangeCounterColor=3) {
-                        AccColorWinChange=7fe5f0 
-                    } else if (WinChangeCounterColor=4) {
-                        AccColorWinChange=Red
-                    } else if (WinChangeCounterColor=5) {
-                        AccColorWinChange=8470FF
-                    } else if (WinChangeCounterColor=6){
-                        AccColorWinChange=Yellow 
-                    } 
-                        StringReplace, NTitle, Title, RuneLite -, , All        ;;; ---- This allows for the OSD to remain drawn when focusing other windows
-                        
 
-                        Gui, 1: Default
-                        GuiControl, +c%AccColorWinChange%, MyText
-                        GuiConF(1,3,NTitle,-1)
-        }
-    }
-    ;#########
-
-if (WinMatch=1) {     ;;; ----- Added so that when non-runelite window is focused this data data for active window does not update
-    
-    WinGetActiveStats, Title, wWidth, wHeight, WX, WY
-    if (TimerMouseT=2 or TimerMouseT=1) {
-    if (GUI2ActiveMouse!=0)
-        GUI2ActiveMouse:=0
-    if (TimerIsRunning=1 or TimerIsPaused=1)
-        GuiConF(2,1,WX+30,WY+40)
-    }
-    WY+=OSD_MOVE2+50
-    WX+=OSD_MOVE+10
-    ;window settings begin
-    if (counterkey>0)
-        NTitle = %NTitle% - %counterkey%
-    if(GUI_Names=1)
-        GuiConF(1,1,WX,WY)
-    
-} else {
-;;if not runelite window stuff here
-    if ((TimerIsRunning=1 or TimerIsPaused=1) and (TimerMouseT=1 or TimerMouseT=0)) { 
-        GUI2ActiveMouse:=1
-    } else {
             GuiConF(2,2,-1,-1)
             GUI2ActiveMouse:=0
-    }
+
         GuiConF(1,2,-1,-1)
-        return
-    }
+
     return
 ;-------------------;-------------------;-------------------;
 ;-------------------;-------------------;-------------------;
@@ -3285,93 +2742,6 @@ return
 ;-------------------;-------------------;-------------------;
 ;-------------------;-------------------;-------------------;
 
-AccTimers:
-AccTimersTimerCounter++
-AccTimersCheckCounter:=0
-for keyAccTimersCheckCounter, valueAccTimersCheckCounter in AccountTimerTotalSeconds {
-    if (valueAccTimersCheckCounter>=1) {
-        AccTimersCheckCounter++
-    }
-}
-if (AccTimersCheckCounter<=0) {
-    Goto, AccTimers
-}
-fkbud:
-if (WaitJustOneFuckingSecond<=-1) {
-    for keyAccTimerForPlacement in Account {
-            keyAccTimerForPlacementAccount := ASTWindow[keyAccTimerForPlacement]
-            GuiNumberFKBUD:=keyAccTimerForPlacement+NumAccs
-            WinGetActiveTitle, aTitle2
-    if (GuiNumberFKBUD!=0 and GuiNumberFKBUD) {
-    if (AccountTimerTotalSeconds[keyAccTimerForPlacement]<=2) 
-        GuiConF(GuiNumberFKBUD,2,-1,-1)
-    if (aTitle2="RuneLite - "Account[keyAccTimerForPlacement] and (AccTimersIsOnTopArray[keyAccTimerForPlacement]=0 or !AccTimersIsOnTopArray[keyAccTimerForPlacement])) {
-        GuiConF(GuiNumberFKBUD,4,1,-1)
-        AccTimersIsOnTopArray[keyAccTimerForPlacement]:=1
-                        
-        5String:= % AccTimersIsOnTopArray[keyAccTimerForPlacement] Account[keyAccTimerForPlacement]
-
-    } else if (AccTimersIsOnTopArray[keyAccTimerForPlacement]=1 and aTitle2!="RuneLite - "Account[keyAccTimerForPlacement]) { 
-        GuiConF(GuiNumberFKBUD,4,0,-1)
-        AccTimersIsOnTopArray[keyAccTimerForPlacement]:=0
-    }
-            if (AccountTimerTotalSeconds[keyAccTimerForPlacement]>0) {
-                    WinGetPos, TimerArrayMGetX, TimerArrayMGetY, WWW, HHH, %keyAccTimerForPlacementAccount%
-                    TimerArrayMGetX:=TimerArrayMGetX+OSD_MOVE+40
-                    TimerArrayMGetY:=TimerArrayMGetY+OSD_MOVE2+120
-                    
-
-                    
-                    GuiRandColor(GuiNumberFKBUD)
-                    GuiControl, +c%AccountGUIColor%, MyText
-                    if (TimerArrayMgetX and TimerArrayMGetY)
-                        GuiConF(GuiNumberFKBUD,1,TimerArrayMGetX,TimerArrayMGetY)
-            } else if (AccountTimerTotalSeconds[keyAccTimerForPlacement]<=0 and AccountTimerTotalSeconds[keyAccTimerForPlacement] and GuiNumberFKBUD>NumAccs) { 
-                            if(PlaySound=0) { 
-                                PlaySound=1
-                                SetTimer, AlarmSound, 4000
-                                SetTimer, AlarmSound, on
-                            }
-                GuiConF(GuiNumberFKBUD,2,-1,-1)
-                AccountTimerTotalSeconds.RemoveAt(keyAccTimerForPlacement)
-                AccountTimerTotalSecondsMin.RemoveAt(keyAccTimerForPlacement)
-                AccountTimerFloorTotalMin.RemoveAt(keyAccTimerForPlacement)
-                AccountTimerCDownSec.RemoveAt(keyAccTimerForPlacement)
-            }
-        } 
-    }        
-}
-if (AccTimersTimerCounter>=10) {
-AccTimersTimerCounter:=0
-for keyAccTimers in Account {
-    AccTimerAcc3:=% Account[keyAccTimers]
-    GuiNumberTHESEFORLOOPS:=keyAccTimers+NumAccs
-    if (AccountTimerTotalSeconds[keyAccTimers]>0) {
-            AccountTimerCDownSec[keyAccTimers]--
-            if (AccountTimerCDownSec[keyAccTimers]<=0) {
-                    AccountTimerCDownSec[keyAccTimers]:=60
-            }
-            AccountTimerTotalSeconds[keyAccTimers]:=AccountTimerTotalSeconds[keyAccTimers]-1
-            AccountTimerTotalSecondsMin[keyAccTimers]:=AccountTimerTotalSeconds[keyAccTimers]/60
-            AccountTimerFloorTotalMin[keyAccTimers]:=Floor(AccountTimerTotalSecondsMin[keyAccTimers])
-            AccTimerMinFloor = % AccountTimerFloorTotalMin[keyAccTimers]
-            AccTimerCDownSec = % AccountTimerCDownSec[keyAccTimers]        
-        if(AccountTimerCDownSec[keyAccTimers]<10){
-            AccTimerTimeStr2=0
-        } else {
-            AccTimerTimeStr2=
-        }
-    AccTimerTimeStrVAR=%AccTimerMinFloor%:%AccTimerTimeStr2%%AccTimerCDownSec%
-        if (AccTimerTimeStrVAR="0:60") {
-            GuiConF(GuiNumberTHESEFORLOOPS,2,-1,-1)
-        }
-        GuiConF(GuiNumberTHESEFORLOOPS, 3, AccTimerTimeStrVAR, -1)
-            AccTotalSecMaxIndex:=AccountTimerTotalSeconds.MaxIndex()
-
-            }     
-        }        
-    }
-return
 
 
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
@@ -3393,13 +2763,8 @@ if (tickLimit!=NaN and tickHUD=1) {
             TockTockTickText=-- %tickCounter% --
             TickTockTickTock:=0
         }
-    
-
 GuiRandColor(4)
 GuiConF(4, 3, TockTockTickText, -1)
-
-
-
 } else { 
 setTimer, tickHUD, off
 GuiConF(4,2,-1,-1)
@@ -3407,16 +2772,3 @@ tickCounter:=0
 }
 initTick++
 return
-
-^#x::run F:\VMWINServer\Serbz_MousePerms\nextcommandspotify.bat
-
-~^s::
-WinGetActiveTitle, chaseTitle
-if (chaseTitle="bat.bat - Notepad++ [Administrator]") {
-run F:\VMWINServer\Serbz_MousePerms\bat.bat
-} else {
-
-}
-return
-
-
