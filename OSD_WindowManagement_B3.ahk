@@ -285,7 +285,7 @@ WinNameNoXW2:=Array()
 WinNameNoXY2:=Array()
 stopToggle2:=1
 DotCounter:=0
-chaosDirection2:=Array()y
+chaosDirection2:=Array()
 chaosDirection:=Array()
 xmcoordArray:=Array()
 ordercoordArray:=Array()
@@ -513,16 +513,16 @@ KeysSet:=2
 }
 return
 
-~MButton & LButton::
-keywait, MButton
-keyWait, LButton
-send, {MButton down}
-send, {MButton up}
-	3String = Mouse Set 1
-	3Time:=40*2
-	GuiConF(3,3,3String,-1)
-	MouseSetVar:=1
-return
+;~MButton & LButton::
+;keywait, MButton
+;keyWait, LButton
+;send, {MButton down}
+;send, {MButton up}
+;	3String = Mouse Set 1
+;	3Time:=40*2
+;	GuiConF(3,3,3String,-1)
+;	MouseSetVar:=1
+;return
 RButton::Rbutton
 MButton::MButton
 LCTRL & CAPSLOCK::
@@ -745,11 +745,11 @@ wheelUp::
 gosub, wheelMouseClip
 return
 wheelMouseClip:
-blockinput, on
+;blockinput, on
 fileAppend, %wheelMouseClipval%, %CS%InputWait.txt
-MouseSetVar := 1
+MouseSetVar := 0
 return
-#If MouseSetVar=1 
+#If MouseSetVar=0 
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
 
@@ -765,7 +765,7 @@ return
 
 
 
-RButton & MButton::
+CTRL & B::
 wheelMouseClipval = s
 send, {MButton up}
 
@@ -778,11 +778,16 @@ ifExist, %CS%InputWait.txt
 notExistVar:=False
 MouseSetVar:=100
 while (MouseSetVar==100) {
+	
 	ifExist, %CS%InputWait.txt
+	{
+		blockinput, on
 		break
-	sleep, 1
+	}
+	sleep, 50
 }
-sleep 150
+
+sleep 100
 blockinput, off
 fileRead, InputVar, %CS%InputWait.txt
 if (InputVar=="a")  {
@@ -849,12 +854,12 @@ return
 }
 return
 
-MButton & WheelDown::
+Capslock & WheelDown::
 clipCounter--
 if (clipCounter < 1)
     clipCounter:=clipLimit
 goto clipboardACont
-MButton & WheelUp::
+Capslock & WheelUp::
 clipCounter++
 if (clipCounter > clipLimit)
     clipCounter:=1 ;chk starts with 1 not 0 which is odd anyway
@@ -1469,8 +1474,9 @@ if (TimerIsRunning=0 and TimerIsPaused=0) {
     TimerIsRunning:=1
     TimerIsPaused:=0
     TimerResetWarning:=0
-    GoSub, UpdateOSD2
+    
     SetTimer, UpdateOSD2, on
+GoSub, UpdateOSD2
 
     if (NoAHKVars=0) {
         ifExist, E:\rsahkvars\TimerCleared.log
@@ -1595,8 +1601,8 @@ return
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
 
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
-RButton & WheelDown:: ;;window ontop or not
-keywait, RButton
+Capslock & q:: ;;window ontop or not
+keywait, q
 WinGetTitle, A_Title, A
     if (OnTopArray[A_Title]=1) {
     WinSet, AlwaysOnTop, Off, A
@@ -1735,7 +1741,7 @@ winActivate, ahk_ID %ChaosWindowGUID%
         WinNameNoXY[CounterWinBack2]:=NoXY
         MonArray:=monitorFunc()
 ;	for each, val in MonArray {
-;		3String = %val% 
+;		3String = %each% - %val% 
 ;    3Time:=40*3 ; 40 is one second
 ;    GuiConF(3,3,3String,-1)
 ;	sleep 3000
@@ -1790,9 +1796,9 @@ cRand:=Rand(3.5,4.5)
             } else if (ChaosX[keyChaos]<=(ChaosArray[keyChaos*6-4])) { 
                 chaosDirection[keyChaos]:=cRand
             }
-            if (ChaosY[keyChaos]>=(ChaosArray[keyChaos*6-1]/2)-(WinNameNH[keyChaos]/2)+85) { 
+            if (ChaosY[keyChaos]>=(ChaosArray[keyChaos*6-1]/2)-(WinNameNH[keyChaos]/2)+245) { 
                 chaosDirection2[keyChaos]:=-cRand
-            } else if (ChaosY[keyChaos]<=-(ChaosArray[keyChaos*6-1]/2)+(WinNameNH[keyChaos]/2)+85) {
+            } else if (ChaosY[keyChaos]<=-(ChaosArray[keyChaos*6-1]/2)+(WinNameNH[keyChaos]/2)+245) {
                 chaosDirection2[keyChaos]:=cRand
             }
 } else {
@@ -1800,6 +1806,11 @@ cRand:=Rand(3.5,4.5)
 }
 ChaosX[keyChaos]:= chaosDirection[keyChaos] + ChaosX[keyChaos]
 ChaosY[keyChaos]:= chaosDirection2[keyChaos] + ChaosY[keyChaos]
+;msgbox, % chaosDirection2[keyChaos] ChaosX[keyChaos] ChaosY[keyChaos] chaosDirection[keyChaos]
+;		3String = % chaosDirection2[keyChaos] ChaosX[keyChaos] ChaosY[keyChaos] chaosDirection[keyChaos]
+;    3Time:=40*1 ; 40 is one second
+;    GuiConF(3,3,3String,-1)
+;	sleep 250
 WinMove, ahk_ID %valChaos% , , % ChaosX[keyChaos] , % ChaosY[keyChaos]
 }
 }    
@@ -2226,12 +2237,12 @@ if (GuiNumber!=0 and GuiNumber) {
     }
 WinSet, TransColor, %CustomColor% 255
 GuiActiveArray[GuiNumber]:=1
-    if (GuiNumber>NumAccs) {
-        Gui, %GuiNumber%: Hide
-        WaitJustOneFuckingSecond:=2
-        SetTimer, 1fuckingsecondtimer, on
-        
-    }
+    ;if (GuiNumber>NumAccs) {
+    ;    Gui, %GuiNumber%: Hide
+    ;    WaitJustOneFuckingSecond:=2
+    ;    SetTimer, 1fuckingsecondtimer, on
+    ;    
+    ;}
 }
 return
 }
@@ -2585,7 +2596,7 @@ if(GlobalSecondsDisplayInit<=0 and GlobalSecondsDisplayInit!=-1){
     SetTimer, UpdateOSD2, 150
     return
 } else {
-    if (GlobalSecondsDisplayInit=GlobalSecondsDisplayInit)
+    if (GlobalSecondsDispelayInit=GlobalSecondsDisplayInit)
         SetTimer, UpdateOSD2, 1000
     GlobalSecondDisplay--
     GlobalSecondsDisplayInit--
@@ -2627,15 +2638,16 @@ if(GlobalSecondsDisplayInit<=0 and GlobalSecondsDisplayInit!=-1){
                     fileDelete, E:\rsahkvars\TimerCleared.log
                 }
         }
-    if (NoAHKVars=0) {
-        ifNotExist, %SavedVarsDir%\TimerTime.log
-            FileAppend, %TimerTimeStr%, %SavedVarsDir%\TimerTime.log
-        ifNotExist, %SavedVarsDir%\TimerTime2.log
-            FileAppend, %TimerTimeStr%, %SavedVarsDir%\TimerTime2.log
-        ifNotExist, %SavedVarsDir%\TimerTime3.log
-            FileAppend, %TimerTimeStr%, %SavedVarsDir%\TimerTime3.log
-    }
+    ;if (NoAHKVars=0) {
+    ;    ifNotExist, %SavedVarsDir%\TimerTime.log
+    ;        FileAppend, %TimerTimeStr%, %SavedVarsDir%\TimerTime.log
+    ;    ifNotExist, %SavedVarsDir%\TimerTime2.log
+    ;        FileAppend, %TimerTimeStr%, %SavedVarsDir%\TimerTime2.log
+    ;    ifNotExist, %SavedVarsDir%\TimerTime3.log
+    ;        FileAppend, %TimerTimeStr%, %SavedVarsDir%\TimerTime3.log
+    ;}
     GuiConF(2,3,TimerTimeStr,-1)
+;msgbox, % TimerTimeStr
 return
 ;-------------------;-------------------;-------------------;
 ;-------------------;-------------------;-------------------;
@@ -2720,10 +2732,10 @@ OnTopArray[Title]:=2
     OntopArray[O_Title]:=1
 }
 
-            GuiConF(2,2,-1,-1)
-            GUI2ActiveMouse:=0
+            ;GuiConF(2,2,-1,-1)
+            GUI2ActiveMouse:=1
 
-        GuiConF(1,2,-1,-1)
+        ;GuiConF(1,2,-1,-1)
 
     return
 ;-------------------;-------------------;-------------------;
