@@ -172,6 +172,7 @@
 #MaxThreadsBuffer On
 #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 #SingleInstance Force
+#InstallKeybdHook
 ;#ErrorStdOut
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetTitleMatchMode, 2 ; Match if the text appears anywhere in the window title
@@ -189,11 +190,14 @@ SetWinDelay, 0
 GroupAdd, Runelite, ahk_class SunAwtFrame
 GroupAdd, RuneliteD, RuneLite
 
-
 Run, cmd.exe /c mkdir %A_ScriptDir%\SerbzOSD\
+AHKDirectory := A_ScriptDir
+AHKDirectory.="\"
 
 
-
+CS=%AHKDirectory% ;; CS=C:\rsahkvars ;; - LAPTOP
+CSR := CS
+;msgbox, %CS%
 ;########################;;########################;;########################;
 ;########################;;######ACC SETUP#########;;########################;
 ;########################;;########################;;########################;
@@ -209,7 +213,7 @@ ifExist, %CS%AHKDirectory.log
 fileRead, AHKDirectory, %CS%AHKDirectory.log
 ifExist, E:\rsahkvars
     FileMoveDir, E:\rsahkvars, %AHKDirectory%, R
-CS=%AHKDirectory% ;; CS=C:\rsahkvars ;; - LAPTOP
+
 ifNotExist, %CS%pwfilelist.txt
     NoAHKVars:=0
 } else {
@@ -648,7 +652,7 @@ ifExist %CS%GlobalSecondDisplay.log
 	 
 	 
 	 clipLimit:=0
-	 msgbox, % CS
+	 
 	ifExist %CS%clipboard.txt 
 	{
 	clipBoardB := Array()
@@ -752,7 +756,7 @@ ifexist, %CS%
 } ; else { 
 
 ;csr:=substr(A_ScriptDir, 1, StrLen(A_ScriptDir)-13)
-;msgbox, % csr
+;r
 
 ;ifexist, %csr%
 ;	{
@@ -787,7 +791,7 @@ P_WinUMID:=
 			GuiConF(3,3,3String,-1)
 			InitFinish:=1
 ;msgbox, %CurDisplayCY%, %CurDisplayCX%
-
+CS:=CSR
 
 return
 capslock & esc::
@@ -809,7 +813,10 @@ return
 
 capslock & esc::reload
 
-
+Volume_Mute::F2
+Volume_Down::F3
+Volume_Up::F4
+Sleep::F1
 ;-------------------------------------
   
 
@@ -1043,8 +1050,7 @@ return
 
 ;-;-;-;-;-;- left click add
 LALT & Q::
-
- 
+gosub, markerClear
 clipboard:=
 for key, val in xmcoordArray
 {
@@ -1143,6 +1149,7 @@ return
 
 ;-;-;-;-;-;- Play macro
 LCTRL & w::
+gosub, markerClear
 macroplay:
 	3String=play
 	3Time:=40*2 ;; 40 = 1 second
@@ -1392,6 +1399,7 @@ ifExist, %CS%clipboard.txt
     fileDelete, %CS%clipboard.txt
 for key, val in clipBoardA
     fileAppend, %val%|, %CS%clipboard.txt
+	
 } else {
 	send, % i
 }
@@ -1629,7 +1637,7 @@ global pwFileList
 global CS
 global pwDirVar
 	;msgbox, % pwDirVar
-	;msgbox, % CS
+	;
 	;msgbox, % pwFileList
 	FileDelete, %CS%pwfilelist.txt
 	sleep, 500
@@ -3308,7 +3316,7 @@ if (fireFoxRunning == 0) {
 if (fireFoxRunning == 0) {
 	run, %driveStr%\Tools\FireFoxPortableESR\FireFoxPortable.exe
 	sleep, 250
-	3String=%StringyStr% is running.
+	3String= FireFox is running.
 			3Time:=40*2 ;; 40 = 1 second
 			GuiConF(3,3,3String,-1)
 	return
@@ -4624,7 +4632,7 @@ if PornModeColorTime > 0
 	GuiControl, +c%Gui3Color%, MyText
 	Gui, 1: Default
 	3Time:=40 ; 40 is one second
-	GuiConF(3,3,"PM: ACTIVATED",-1)
+	;GuiConF(3,3,"PM: ACTIVATED",-1)
 	;GuiConF(3,1,x+RandPorn,y+RandPorn2)
 } else {
 	;GuiConF(3,2,-1,-1)
@@ -4636,7 +4644,7 @@ if PornModeColorTime > 0
 	Gui, 1: Default
 	if (subbedPorn = 1) {
 		3Time:=40 ; 40 is one second
-	GuiConF(3,3,"PornMode: De-activated.",-1)
+	;GuiConF(3,3,"PornMode: De-activated.",-1)
 	subbedPorn := 0
 	} else {
 		GuiConF(3,2,-1,-1)
