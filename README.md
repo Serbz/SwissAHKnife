@@ -43,15 +43,8 @@ desktop and window management, various toolsets, HUD
   N - Kills all runelite windows without warning
   H - Kills the window, any window, even explorer, that is under the cursor without warning.
   
--  
--  
--  
--
--                
--  
--  
--  
--  
+
+-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
 B3 - current.
 ---------------
