@@ -3585,9 +3585,9 @@ cRand:=Rand(3.5,4.5)
             } else if (ChaosX[keyChaos]<=(ChaosArray[keyChaos*6-4])) { 
                 chaosDirection[keyChaos]:=cRand
             }
-            if (ChaosY[keyChaos]>=(ChaosArray[keyChaos*6-1]/2)-(WinNameNH[keyChaos]/2)+245) { 
+            if (ChaosY[keyChaos]>=(ChaosArray[keyChaos*6-1]/2)-(WinNameNH[keyChaos]/2)+445) { 
                 chaosDirection2[keyChaos]:=-cRand
-            } else if (ChaosY[keyChaos]<=-(ChaosArray[keyChaos*6-1]/2)+(WinNameNH[keyChaos]/2)+245) {
+            } else if (ChaosY[keyChaos]<=-(ChaosArray[keyChaos*6-1]/2)+(WinNameNH[keyChaos]/2)+445) {
                 chaosDirection2[keyChaos]:=cRand
             }
 } else {
