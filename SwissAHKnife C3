@@ -1,0 +1,5003 @@
+
+;########################;;########################;;########################;;########################;;########################;;########################;;########################;
+;########################;;########################;;########################;;########################;;########################;;########################;;########################;
+;########################;;########################;;########################;;########################;;########################;;########################;;########################;
+;  Usage:  (required AHK v1.1.31+)
+;;;               OSRS NOTES: S3RBZ Needs mirror shield; S3RB2 Needs lobsters to finish haunted mine, no mushroom in cart
+;;;
+;;;        Space - CHANGES THE KEY MODE !!! - Two modes, OSD or Window Management
+;;;        
+;;;        OSD MODE KEYS:
+;;;            CAPSLOCK + 
+;;;            F - Changes the Capslock + Left/Right Mouse button and C key modes
+;;;                Left button creates, Right button offers options for existing interfaces, and C clears all interfaces.    
+;;;            X - Creates a tick counter, offers options if active to change style, remove the counter, or change the tick count limit.
+;;;            Z - Offers options for hiding, sticking cursor objects (messages/timers/etc) and nameplates
+;;;            E - Changes the Global Timer Display mode between cursor, runelite, and runelite unless inactive
+;;;            W - Pauses/Unpauses the global timer
+;;;            R - Sets either the Account Specific countdown timer start time or the same for the Global Timer.
+;;;            T - Creates or removes an account specific timer
+;;;            Q - Creates or removes the Global Timer
+;;;            A - Either counts the account specific counter up, or clears it - These are attached to nameplates, if nameplates are hidden these are too.
+;;;            Up, Down, Left, Right move the nameplates and attached displays on the runelite windows, these locations are saved.
+;;;        
+;;;        
+;;;        WINDOW MANAGEMENT KEYS:
+;;;            CAPSLOCK + 
+;;;            G - Launch a single runelite    
+;;;            A - Disable/enable a window under the cursor
+;;;            T - Disable/enable a single window that is focused (non runelite, very handy to use on the desktop, so accidentally right *FORBIDDEN_WORD*ing (c1ick) it is not possible)
+;;;            Q - Set a window to be always ontop or not
+;;;            R - Save runelite window locations or move to saved runelite window locations
+;;;            D - Bring firefox/chrome into focus
+;;;            W - Bring window opacity down
+;;;            E - Reset window opacity to 255 (opaque)
+;;;        
+;;;        
+;;;        GLOBAL KEYS
+;;;        Capslock alone - Cycles through runelite window focus, priority on next account window if active else search for empty runelite (not logged in)
+;;;            ;CAPSLOCK + 
+;;;            B - Clears script settings, either all or all non-account settings    
+;;;            Y - Reloads the script
+;;;            N - Kills all runelite windows without warning
+;;;            H - Kills the window, any window, even explorer, that is under the cursor without warning.
+;;;            
+;;;          
+;;;
+
+;########################;;########################;;########################;;########################;;########################;;########################;;########################;
+;########################;;########################;;########################;;########################;;########################;;########################;;########################;
+;########################;;########################;;########################;;########################;;########################;;########################;;########################;
+
+;;;     ***It should go without saying, this script does not break jagex ToS.***
+;;;----------------------------------------------------
+;;;     A6 - File Below, current. "Moving Forward"
+;;;----------------------------------------------------
+;;;Nike'd the caps+H
+;;;Created Temp variables in some for loops to prevent loops overlapping and causing some variables to change when they shouldn't
+;;;Added searching for ontop windows to the reload function
+;;;When displaying a window ontop, you will still be able to see the gui now instead of the gui being stuck underneath it.
+;;;Nearly removed the please wait times on the global timer (its much faster)
+;;;Changed the way text outlines are created and drawn
+;;;Changed the way GUI's are removed/hidden/shown/added (Enabling the easy addition of future GUI)
+;;;Changed When starting an account specific timer, with no time set now, it will prompt for a time as usual, but will start the timer afterward as well.
+;;;Fixed GUI: 0 trying to exist (causing tons of error messages)
+;;;Fixed when sometimes pausing the timer while attached to the cursor, the timer actually just stopping the change of location of the timer, meanwhile the timer would continue running.
+;;;Fixed when setting a new global timer time, and the timer was running and attached to the cursor, the timer would freeze.
+;;;Fixed timer not clearing text outlines
+;;;Fixed Gui's not showing ontop of windows that are shown ontop
+;;;Fixed Global timer displaying 60 when it should be 59, or 59 when it should be 60
+;;;Added Capslock + B, tick counter, Left Alt + B changes its display mode, Capslock + N selects a new tick limit
+;;;Added a gui specifically for debug messages, Capslock + U enables them.
+;;;Various small optimizations, but didn't note them, IE. added GuiConF() which is a new function to handle GUI much better than before.
+;;;     
+;;;----------------------------------------------------
+;;;     A503 513
+;;;----------------------------------------------------
+;;;     
+;;;     Account Specific timer functions operate on for loops, intialization of one now is a while loop.
+;;;         Moved drawing of timers into a function paired with global UpdateOSD timer so
+;;;         there is no delay when moving the GUI around.
+;;;     Added rudimentary Outlines around GUI 3, and 2, which are the global timers and the mouse tooltip messages
+;;;     Capslock F now will change the next Account Specific Timer Time that is created.
+;;;     Added Capslock C which will hide Mouse Tooltip messages
+;;;     Added Capslock H which will offer to kill the process of the window under the cursor, press again to confirm.
+;;;     Fixed an issue where some variables may be written to the script directory not C:\Serbz_multilog
+;;;     Fixed an issue where the Account specific timer belonging to the last account in the Account Array would not
+;;;         Be created properly or drawn, and would also interrupt and remove the timer belongong to the first
+;;;         Account in the Account Array
+;;;     Added a sound that plays at the end of an Account specific timer
+;;;     If the file favicon.ico exists in the directory C:\Serbz_Multilog\ as C:\Serbz_Multilog\favicon.ico
+;;;         It will now be set as the script icon rather than the defaul AHK green bordered, white, capital, H.
+;;;     
+;;;----------------------------------------------------
+;;;     A420, 421, 422.
+;;;----------------------------------------------------
+;;;
+;;;     Your usernames do not need to be entered at all anymore, your usernames are automatically added as played.
+;;;     Account Setup Removed.
+;;;     Fixed another problem with the global timer, where if the .log didn't exist it would get stuck in a loop
+;;;     Removed msgbox left in a for statement
+;;;     Changed the way GUI 1 is Hidden/Destroyed/Built to remove the blank ahk windows from the task bar
+;;;     Fixed the global timer not setting as ontop
+;;;     fixed not being able to reset the account specific timers
+;;;
+;;;----------------------------------------------------
+;;;     A418 - https://pastebin.com/m5ygrkaV
+;;;----------------------------------------------------
+;;;
+;;;     Account specific timers are funcional!
+;;;     Each account can have its own timer, global timer is still a thing.
+;;;     Fixed saving of the UI position, increased the amount of pixels it moves per key press as well.
+;;;     Added Firefox or chrome first run question, caps d will now function with the one you select
+;;;     added keys for clearing some or all of the settings
+;;;     Fixed various different global timer bugs, where GUI failed destroy/build
+;;;     Fixed an issue where deactivating a window did not work
+;;;     Fixed unintentional issue with capslock+enter
+;;;     Every dialogue box should now open at the cursor position
+;;;     Added a delay to the reload for debugging reasons
+;;;     Added Mouse tooltips for functions that were missing them.
+;;;
+;;;----------------------------------------------------
+;;;     A332 - https://pastebin.com/TgypMUMx
+;;;----------------------------------------------------
+;;;
+;;;     Every Hotkey is a capslock hotkey now
+;;;     Various bugs fixed with the timer, hiding displays, and messages
+;;;     Some more old hotkeys were removed
+;;;     The timer's reset key was merged with capslock Q
+;;;     
+;;;----------------------------------------------------
+;;;     A330 - https://pastebin.com/TgypMUMx
+;;;----------------------------------------------------
+;;;
+;;;     Re-wrote how the GUI is built
+;;;     Removed OBS and Twitch binds/functions/variables
+;;;     Removed Login functions
+;;;     Removed Window position functions
+;;;     Re-wrote timer, fixing bugs and adding color
+;;;     Added options to timer for window placement
+;;;     Added GUI 3, status messages
+;;;----------------------------------------------------
+;;;     A120 & A121 - https://pastebin.com/eYrgizfQ <-121
+;;;----------------------------------------------------
+;;;
+;;;     Added GUI Controls
+;;;     Added an initial setup for account names so it will work for not just me
+;;;     Changed many static variabls to dynamic
+;;;     The twitch/obs timers are set to off by default
+;;;     
+;;;     -/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-
+;;;     @Roof Scapers 
+;;;     **ALSO!!
+;;;     If you could react to this message with :thumbsup: I'll assign you a role to be specifically tagged with these updates in the future so I do not have to tag the @Roof Scapers role from then on.**
+;;;     -/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-
+
+;########################;;########################;;########################;;########################;;########################;;########################;;########################;
+;########################;;########################;;########################;;########################;;########################;;########################;;########################;
+;########################;;########################;;########################;;########################;;########################;;########################;;########################;
+
+
+;;;Fixed the jitter when the tick counter was set to rotate around the cursor, its very smooth now, and it moves slower, i didn't like how fast it was going it was hard to pay attention to. Much better now.
+;;;They Aren't Perfect yet but account specific timers have outlines now too
+;;;Account Specific timer time will now save between reloads
+;;;Finally have proper timer sounds that don't force the whole thread to pause.
+    ;; The global timer will now audibly alert you.
+
+;#MaxThreadsPerHotkey 999
+#MaxThreads 999
+#MaxThreadsPerHotkey 99
+;;;#HotkeyInterval 500 ; This is the default value (milliseconds).
+#MaxHotkeysPerInterval 999
+#MaxThreadsBuffer On
+#NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
+#SingleInstance Force
+;#ErrorStdOut
+SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
+SetTitleMatchMode, 2 ; Match if the text appears anywhere in the window title
+SetCapsLockState, off
+SetCapsLockState, alwaysoff
+StringCaseSense, off
+DetectHiddenWindows, on
+SetBatchLines, -1
+CoordMode, Mouse, Screen
+;;Hotkey, LCTRL & RCTRL, , T99
+SetMouseDelay, 0
+SetKeyDelay, 0
+SetWinDelay, 0
+
+GroupAdd, Runelite, ahk_class SunAwtFrame
+GroupAdd, RuneliteD, RuneLite
+;if not A_IsAdmin
+;{
+;	;Run, powershell -c %A_
+;   Run *RunAs "%A_ScriptFullPath%" 
+;   ExitApp
+;}
+
+
+Run, cmd.exe /c mkdir %A_ScriptDir%\SerbzOSD\
+
+CS=%A_ScriptDir%\SerbzOSD\
+
+
+IfExist, %A_ScriptDir%\favicon.ico
+    Menu, Tray, Icon, %A_ScriptDir%\favicon.ico
+
+
+
+P_WinUMID:=
+
+;########################;;########################;;########################;
+;########################;;######ACC SETUP#########;;########################;
+;########################;;########################;;########################;
+NoRLDir:=0
+NoAHKVars:=0
+RuneLiteDir:=
+MsgboxMove_String:=
+SetTimer, MsgboxMove, 250
+SetTimer, MsgboxMove, off
+
+ifExist, %A_ScriptDir%\SerbzOSD\AHKDirectory.log
+{ 
+fileRead, AHKDirectory, %A_ScriptDir%\SerbzOSD\AHKDirectory.log
+ifExist, E:\rsahkvars
+    FileMoveDir, E:\rsahkvars, %AHKDirectory%, R
+CS=%AHKDirectory% ;; CS=C:\rsahkvars ;; - LAPTOP
+ifNotExist, %A_ScriptDir%\SerbzOSD\pwfilelist.txt
+    NoAHKVars:=1
+} else {
+NoAHKVars:=1
+}
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;;-;-;-;-;-;-;-;-
+;-;-;-;-;-;-; Number of accounts, and account names ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;;-;-;-;-;-;-;-;-
+Account := Object()
+NumAccs:=0
+Title:=
+AccCounter:=0
+NotExistCorrection:=0
+
+AccountRead:
+ifExist %A_ScriptDir%\SerbzOSD\NumAccs.log
+{
+    FileRead, NumAccs, %A_ScriptDir%\SerbzOSD\NumAccs.log
+    
+while (AccCounter<NumAccs) {
+    AccCounter++
+        ifExist %A_ScriptDir%\SerbzOSD\Account%AccCounter%.log
+        {
+            FileRead, AccTempAdd, %A_ScriptDir%\SerbzOSD\Account%AccCounter%.log
+            Account.Insert(AccTempAdd)
+        }
+    }
+} 
+;NumAccsCorrection:
+;NumAccCounter:=NumAccs
+;while (NotExistCorrection=0) {
+;    NumAccCounter++
+;    ifNotExist %A_ScriptDir%\SerbzOSD\Account%NumAccCounter%.log
+;    {
+;        NotExistCorrection=1
+;        NumAccCounter:=NumAccCounter-NotExistCorrection
+;        break
+;    }
+;}
+;while (NumAccs<=NumAccCounter) { 
+;    NumAccs++
+;    ifExist %A_ScriptDir%\SerbzOSD\Account%NumAccs%.log
+;        {
+;            FileRead, AccTempAdd, %A_ScriptDir%\SerbzOSD\Account%NumAccs%.log
+;            Account.Insert(AccTempAdd)
+;        } else {
+;            NumAccs--
+;            break
+;        }
+;    }
+;} 
+;            
+IfExist %A_ScriptDir%\SerbzOSD\NumAccs.log
+    FileDelete, %A_ScriptDir%\SerbzOSD\NumAccs.log
+FileAppend, %NumAccs%, %A_ScriptDir%\SerbzOSD\NumAccs.log
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;;-;-;-;-;-;-;-;-
+;-;-;-;-;-;-;-;-;-;-;-; Check for runelite directory  ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;;-;-;-;-;-;-;-;-
+ifNotExist, %A_ScriptDir%\SerbzOSD\RuneLiteDir.log 
+{
+    SetTimer, MsgboxMove, on
+    MsgboxMove_String=Browse for Runelite
+    MsgBox, 4, %MsgboxMove_String%, Browse to runelite.exe?
+    IfMsgBox, Yes 
+    {
+        FileSelectFile, RuneLiteDir
+        FileAppend, %RuneLiteDir%, %A_ScriptDir%\SerbzOSD\RuneLiteDir.log
+    }
+    IfMsgBox, No
+    {
+        NoRLDir:=1
+    }
+    goto AccPub2
+} else {
+    FileRead, RuneLiteDir, %A_ScriptDir%\SerbzOSD\RuneLiteDir.log
+    goto AccPub2
+}
+AccPub2:
+If (RuneLiteDir:=) {
+    NoRLDir:=1
+}
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;;-;-;-;-;-;-;-;-
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-; Variable Initialization ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;;-;-;-;-;-;-;-;-
+
+
+TimerArrayMGetX:=0
+AccountTimerCDownSec:=Array()
+AccountTimerTotalSeconds:=Array()
+AccountTimerTotalSecondsMin:=Array()
+AccountTimerFloorTotalMin:=Array()
+AccTimersIsOnTopArray:=Array()
+caps_h_counter:=0
+TimerArrayMGetY:=0
+TwitchMinimizeDisableControls:=0 ; -- See the Capslock:: function This will need fixed
+DisableWindowToggle2:=0
+CountWindow:=0
+osdfirst:=0
+OBSTimer_Counter:=0
+OBSVar:=0
+P_PrintString:=000
+TwitcheqCounter:=0
+TimerMouseT:=0
+SaveWaitCounter:=0
+AccClear=0
+IsRunelite :=
+RLUID:=
+mdelaycount:=50
+DisableWindowToggle1=0
+NameCheck2:=
+AccountCheckName:=
+NameDisable:=
+AccColorWinChange=
+A_TitleCheck:=
+MouseFollowMag:=0
+keyentercaps:=0
+CounterVar:=0
+counterkey:=0
+count_type:=0
+GlobalTimerMinutes:=
+OSD_MOVE2:=0
+OSD_MOVE:=0
+alcounter:=0
+TimerIsRunning:=0
+GUI_Names:=0
+cdvar:=0
+capsTitle=
+colorswap:=0
+GlobalSecondDisplay:=0
+GUI2ActiveMouse:=0
+lastmanual:=0
+TimerIsPaused:=0
+stopToggle:=0
+TimerResetWarning=0
+guidUnderCursorDumbDumbDumb:=
+TimerMgetX:=0
+capsp_press:=0
+capsm_press:=0
+ChangeBtnNames:=0
+CounterFuncArray:=Object()
+AccTimerCDSec:=Array()
+GuiActiveArray:=Array()
+Account:=Object()
+AccTimerTSec:=Array()
+AccTimerTSecMin:=Array()
+AccTimerFTMin:=Array()
+ASTWindow:=Array()
+AccTimerTimeStr=Object()
+OnTopArray:=Array()
+wheelMouseClipval = a
+MarkerArrayY:=()
+MarkerArrayX:=Array()
+xz := Array()
+yz := Array()
+RLUID:=
+Zy := Array()
+Zx := Array()
+ResX := Array()
+ResY := Array()
+TimeString:=""
+x2 := Array()
+y2 := Array()
+hdd_frame := Array()
+hdc_frame := Array()
+Note:=Array()
+ChaosArray:=Array()
+IsRunelite:=0
+ChaosWindowGUIDArray:=Array()
+ATimersIsOntop:=Array()
+ChaosX:=Array()
+ChaosY:=Array()
+WinName2:=Array()
+WinNameNW2:=Array()
+CapsTAccTimersCounter:=0
+WinNameNH2:=Array()
+WinNameNoXW2:=Array()
+WinNameNoXY2:=Array()
+stopToggle2:=1
+DotCounter:=0
+chaosDirection2:=Array()
+chaosDirection:=Array()
+xmcoordArray:=Array()
+ordercoordArray:=Array()
+ymcoordArray:=Array()
+AccTimersTimerCounter:=0
+MagGUID:=0
+MagCounter:=0
+capsWinUMSwitch:=0
+AccTimerTimeStr2:=
+AccTimerCDownSec:=
+AccTimerMinFloor:=
+pwchangeTimer2OnOff:=0
+AccountGUIColor:=
+WinCounterTVar:=0
+TimerMGetY:=0
+MgetY5T:=0
+MgetX5T:=0
+3String=
+OutlineCounter:=0
+offset1:=0
+offset2:=0
+TockTockTickText:=
+TickTockTickTock:=0
+tickHUD=0
+initTick:=0
+SkipCounterT:=
+SkipCounter:=
+WinDisable:=Array()
+NoteSkipArray:=Array()
+TockTickText=
+tickCounter:=0
+4ThreeX:=
+4ThreeY:=
+pwchcrVar2:=
+pwchcrVar:=
+pwFileList:=Array()
+pwTimer:=0
+pwchcrVarLen:=
+pwchcrVar1:=
+pwCounterVar:=0
+pwInActive:=False
+T:=
+SynActive:=1
+OutputVar3:=0
+OutputVar2:=0
+Debug:=0
+total_lines2:=0
+total_lines:=0
+ThreeSinCosCounter:=0
+5String:=
+5ThreeX:=
+5ThreeY:=
+stopThreeGo:=0
+GuiVarCounter:=0
+PlayVariable:=0
+AltAlarmSound:=0
+PlaySound:=0
+DebugPriority:=0
+MarkerCounter4:=0
+MarkerOutline:=
+winauthRunning:=0
+tickMonArray:=Array()
+DebugCycle:=0
+Global GuiOutlineID
+Global MyText
+WaitJustOneFuckingSecond:=2
+asciichar := Chr(8226)
+ActiveToggle:=0
+FoundX:=
+FoundY:=
+RuneAcc_UID:=Object()
+PinsArray := Array()
+PinsArray := ["SerbzA","SerbzB","SerbzC","SerbzD","SerbzE","SerbzF"]
+Pin2Use:=""
+PinNum2Use:=""
+output:=0
+clipCounter:=1
+mbuttonval:=0
+MouseSetVar:=1
+notExistVar:=False
+pwlistlabel:=Array()
+pwlist := Array()
+pwselect:=""
+pwstring:=""
+newPW:=""
+MouseFollowMagID:=0
+4ThreeX:=0
+4ThreeY:=0
+monstats:=
+GTMDiff:=0
+monH:=
+monW:=
+WinNameNoXW:=Array()
+WinNameNoXY:=Array()
+WinNameNW:=Array()
+WinNameNH:=Array()
+mbfval:=0
+CounterWinBack:=0
+CounterWinBack2:=0
+WinName:=Array()
+WinBackTimerCounter:=0
+KeysSet:=1
+MarkersNotesMagnifiers:="Markers"
+stringyString:=
+clipBoardA:=Array()
+SynX := 0
+SynY := 0
+SynCounter := % Rand(1,2)
+SynCounter2 := % Rand(1,2)
+SynInit1 := % Rand(0.0,1.0)
+SynInit2 := % Rand(0.0,1.0)
+3Time:=0
+if (SynInit1>=0.5)
+	SynDirection:= % Rand(-1.5,-0.5)
+else
+	SynDirection2:= % Rand(-1.5,-0.5)
+if (SynInit2>=0.5)
+	SynDirection2:= % Rand(0.5,1.5)
+else
+	SynDirection:= % Rand(0.5,1.5)
+mousegetpos, ThreeX, ThreeY
+blockinput, on
+mousemove, 100,100
+MonArray:=monitorFunc()
+sleep, 50
+mousemove, ThreeX, ThreeY
+blockinput, off
+CurDisplayY:=0
+CurDisplayX:=0
+CurDisplayH := % MonArray[5]
+CurDisplayW := % MonArray[6]
+CurDisplayCY := % floor(CurDisplayH/2)
+CurDisplayCX := % floor(CurDisplayW/2)
+Gui3Color:=WHITE
+;--------;--------;--------;--------
+GuiNumber:=0
+while (GuiNumber<5) {
+GuiNumber++
+OutlineBuilder(GuiNumber)
+BuildGUI(GuiNumber)
+Gui, %GuiNUmber%: Hide
+}
+;--------;--------;--------;--------
+
+OutlineBuilder("Temp_Syn")
+BuildGUI("Temp_Syn")
+
+
+
+
+
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+
+
+
+;;;;;; TEMP FIX ;;;;;
+run, cmd.exe /c del %A_ScriptDir%\SerbzOSD\NumAccs.log /f /q
+sleep, 250
+run, cmd.exe /c del %A_ScriptDir%\SerbzOSD\Account*.log /f /q
+sleep, 250
+
+OCS:=CS
+CS=%A_ScriptDir%\Private-AHK-Variables\
+AccDisable := Object()
+    for key in Acccount {
+        AccDisabled[key]:=0    
+    }
+AccDisabledIndex := % AccDisabled.MaxIndex()-1
+AccountIndex := % Account.MaxIndex()-1
+
+firstpartuser:=
+SerbzChristmas:=
+
+ifExist, %A_ScriptDir%\SerbzOSD\SerbzA2.txt
+    FileRead, SerbzA2, %A_ScriptDir%\SerbzOSD\SerbzA2.txt
+ifExist, %A_ScriptDir%\SerbzOSD\SerbzB2.txt
+    FileRead, SerbzB2, %A_ScriptDir%\SerbzOSD\SerbzB2.txt
+ifExist, %A_ScriptDir%\SerbzOSD\SerbzC2.txt
+    FileRead, SerbzC2, %A_ScriptDir%\SerbzOSD\SerbzC2.txt
+ifExist, %A_ScriptDir%\SerbzOSD\SerbzD2.txt
+    FileRead, SerbzD2, %A_ScriptDir%\SerbzOSD\SerbzD2.txt
+ifExist, %A_ScriptDir%\SerbzOSD\SerbzE2.txt
+    FileRead, SerbzE2, %A_ScriptDir%\SerbzOSD\SerbzE2.txt
+ifExist, %A_ScriptDir%\SerbzOSD\SerbzF2.txt
+    FileRead, SerbzF2, %A_ScriptDir%\SerbzOSD\SerbzF2.txt
+
+ifExist %A_ScriptDir%\SerbzOSD\GUI_Names.log
+{
+	FileRead, GUI_Names, %A_ScriptDir%\SerbzOSD\GUI_Names.log
+}
+
+
+ifExist, %A_ScriptDir%\SerbzOSD\SerbzChristmas.txt
+    FileRead, SerbzChristmas, %A_ScriptDir%\SerbzOSD\SerbzChristmas.txt
+ifExist, %A_ScriptDir%\SerbzOSD\firstpartuser.txt
+    FileRead, firstpartuser, %A_ScriptDir%\SerbzOSD\firstpartuser.txt
+
+CS:=OCS
+
+;;msgbox, % CS
+ifExist %A_ScriptDir%\SerbzOSD\GlobalTimerMinutes.log
+{
+ FileRead, GlobalTimerMinutes, %A_ScriptDir%\SerbzOSD\GlobalTimerMinutes.log
+ GlobalTotalSeconds:=GlobalTimerMinutes*60
+ GlobalSecondsDisplayInit:=GlobalTotalSeconds-1
+} else {
+GlobalTotalSeconds:=
+GlobalTimerMinutes:=
+GlobalSecondsDisplayInit:=
+}
+
+IfExist %A_ScriptDir%\SerbzOSD\tickDisplaySetting.log
+{
+    fileRead, tickDisplaySetting, %A_ScriptDir%\SerbzOSD\tickDisplaySetting.log
+} 
+if (tickDisplaySetting<1 or tickDisplaySetting>3 or !tickDisplaySetting) {
+tickDisplaySetting:=1
+}
+
+IfExist %A_ScriptDir%\SerbzOSD\OSD_MOVE.log
+{
+	fileRead, OSD_MOVE, %A_ScriptDir%\SerbzOSD\OSD_MOVE.log
+}
+IfExist %A_ScriptDir%\SerbzOSD\OSD_MOVE2.log
+{
+	fileRead, OSD_MOVE2, %A_ScriptDir%\SerbzOSD\OSD_MOVE2.log
+}
+
+IfExist %A_ScriptDir%\SerbzOSD\FFCH.log
+{
+    fileRead, FFCH, %A_ScriptDir%\SerbzOSD\FFCH.log
+} else {
+MsgboxMove_String=Firefox or Chrome
+ChangeBtnNames:=1
+Btn1_Name=Firefox ; YES
+Btn2_Name=Chrome ; ELSE
+SetTimer, MsgboxMove, on
+MsgBox, 4, %MsgboxMove_String%, Choose a button:
+IfMsgBox, YES 
+    FFCH=Mozilla
+else 
+    FFCH=Chrome
+fileAppend, %FFCH%, %A_ScriptDir%\SerbzOSD\FFCH.log
+}
+
+ifExist %A_ScriptDir%\SerbzOSD\TimerIsPaused.log
+    fileRead, TimerIsPaused, %A_ScriptDir%\SerbzOSD\TimerIsPaused.log
+ifExist %A_ScriptDir%\SerbzOSD\GlobalTimerMinutes.log
+    fileRead, GlobalTimerMinutes, %A_ScriptDir%\SerbzOSD\GlobalTimerMinutes.log
+ifExist %A_ScriptDir%\SerbzOSD\GlobalTimerMinR.log
+    fileRead, GlobalTimerMinR, %A_ScriptDir%\SerbzOSD\GlobalTimerMinR.log
+ifExist %A_ScriptDir%\SerbzOSD\GlobalSecondDisplay.log
+    fileRead, GlobalSecondDisplay, %A_ScriptDir%\SerbzOSD\GlobalSecondDisplay.log
+
+    ifExist %A_ScriptDir%\SerbzOSD\ActiveToggle.log
+    {
+    fileRead, ActiveToggle, %A_ScriptDir%\SerbzOSD\ActiveToggle.log
+        if (ActiveToggle=1) {
+        ActiveToggle:=0
+        SetTimer, ActivateWinUM, off
+        } else {
+        ActiveToggle:=1
+        SetTimer, ActivateWinUM, on
+        }
+    }
+
+    ifExist %A_ScriptDir%\SerbzOSD\MouseMessages.log
+    {
+        FileRead, MouseMessages, %A_ScriptDir%\SerbzOSD\MouseMessages.log
+        if (MouseMessages=1) {
+        }
+    }
+    
+    while (WaitJustOneFuckingSecond > 0)
+     sleep,1
+	 
+	 
+	 clipLimit:=0
+	 
+	ifExist %A_ScriptDir%\SerbzOSD\clipboard.txt 
+	{
+	clipBoardB := Array()
+    fileRead, clipboardPreSpl, %A_ScriptDir%\SerbzOSD\clipboard.txt
+    clipBoardB := % strSplit(clipboardPreSpl, "|")
+    for key, val in clipBoardB {
+        valLen := StrLen(val)
+		
+        if (valLen > 1)
+            clipBoardA.insert(val)
+			clipLimit++
+	}		
+}
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+;-;-;-;-;-;-; Password Manager -;-;-;-;-;-;-;-;-;-;-
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+pwlimit:=0
+drive1g:=""
+drive2g:=""
+drive1:=
+drive2:=
+pwDirVar:=
+alphalist := Array()
+alphalist := ["a","b","c","d","e","f","q","m","n","","o","p","r","s","t","u","h","i","v","w","x","z","j","k","G","l"]
+numlist := Array()
+numlist := ["8","9","7","6","5","4","3","2","1","0"]
+countera = 0
+for key, drivetest in alphalist
+{
+
+	ifexist, %drivetest%:\Tools\wget\bin\wget.exe
+	{
+		drive1:= % drivetest
+		drive1g:=True
+	}
+	ifexist, %drivetest%:\Old Folder\wrinkly_file.txt
+	{
+		drive2:= % drivetest
+		drive2g:=True
+	}
+	if (drive2g != "" and drive1g != "")
+		break
+
+}
+;-;-;-;-;-;- should replace this directory with something globally use-able if the flash drive doesn't exist - drive1
+ifexist, %drive1%:\Tools\Scripts\Private-AHK-Variables\
+{
+
+	CS=%drive1%:\tools\Scripts\Private-AHK-Variables\
+	NoAHKVars:=0
+	pwDirVar=%drive1%:\Tools\Scripts\Private-AHK-Variables\PWs\
+	ifExist, %A_ScriptDir%\SerbzOSD\pwfilelist.txt
+	{
+		fileDelete, %A_ScriptDir%\SerbzOSD\pwfilelist.txt
+		sleep, 500
+	}
+	Run, cmd.exe /c dir /b %pwDirVar% >>  %A_ScriptDir%\SerbzOSD\pwfilelist.txt
+	sleep, 1000
+	pwlimit := pwFunc("help me")
+} else { 
+
+csr:=substr(A_ScriptDir, 1, StrLen(A_ScriptDir)-12)
+
+
+ifexist, %csr%
+	{
+	csr.="\Private-AHK-Variables\"
+	CS=%csr%
+	NoAHKVars:=0
+	pwDirVar=%A_ScriptDir%\SerbzOSD\PWs\
+	ifExist, %A_ScriptDir%\SerbzOSD\pwfilelist.txt
+	{
+		fileDelete, %A_ScriptDir%\SerbzOSD\pwfilelist.txt
+		sleep, 500
+	}
+	Run, cmd.exe /c dir /b %pwDirVar% >>  %A_ScriptDir%\SerbzOSD\pwfilelist.txt
+	sleep, 1000
+	pwlimit := pwFunc("help me")
+
+	}  else {
+	NoAHKVars:=1
+
+	}
+}
+CS:=OCS
+ctrlCVar:=0
+1paste:=False
+coordCounter:=-1
+Fkey := True
+;-;-;-;-;-;-
+
+SetTimer, UpdateOSD, 100
+SetTimer, UpdateOSD, on
+SetTimer, UpdateOSD2, 1000
+SetTimer, UpdateOSD2, off
+SetTimer, SaveWait, 5000
+SetTimer, SaveWait, off
+SetTimer, AccTimers, 100
+SetTimer, AccTimers, off
+SetTimer, Three, 25
+SetTimer, Three, off
+SetTimer, 1fuckingsecondtimer, on
+SetTimer, TimersCheck, 500
+SetTimer, TimersCheck, on
+SetTimer, ActivateWinUM, 0
+SetTimer, Repaint, off
+SetTimer, ChaosTimer, off
+setTimer, Synergy, 100
+setTimer, Synergy, on
+setTimer, Synergy2, 1000
+setTimer, Synergy2, off
+
+
+
+
+			3String=Initialization Finish.
+			3Time:=40*1 ;; 40 = 1 second
+			GuiConF(3,3,3String,-1)
+			InitFinish:=1
+;msgbox, %CurDisplayCY%, %CurDisplayCX%
+
+
+return
+capslock & esc::
+exit
+return
+#If InitFinish=1
+;-;-;-;-;-;- init. end ;-;-;-;-;-;-
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+
+											;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+											;-;-;-;-;-;- Global Keys ;-;-;-;-;-;- No keyset ;-;-;-;-;-;-
+											;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+
+
+
+capslock & esc::reload
+
+
+
+
+
+
+
+
+
+
+CapsLock & d::
+Keywait, d
+WinGetClass, Class, A
+If !InStr(Class, FFCH) {
+WinGetActiveTitle, TitleP
+WinActivate, %FFCH%
+} else { 
+WinSet, Bottom,, %FFCH%
+WinActivate, %TitleP%
+}
+Return
+
+;;RButton::Rbutton
+;;MButton::MButton
+
+~MButton & LButton::
+send, {MButton up}
+MouseSetVar++
+if (MouseSetVar >= 4)
+	MouseSetVar:=0
+3String = Mouse Set %MouseSetVar%
+3Time:=40*2
+GuiConF(3,3,3String,-1)
+return
+
+capslock & tab::
+soundplay, %A_ScriptDir%\CustomSound\godno.wav
+return
+
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+;-;-;-;-;-;- Move window LALT + Direction ;-;-;-;-;-;-
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+LALT & Left::
+mult:=-3
+goto mvwin2
+LALT & right::
+mult:=3
+mvwin2:
+wingetactivestats, title, w, h, x, y
+xmult:=x+mult
+winmove, A, , %xmult%, %y% 
+return
+xbutton2::sendInput, {wheelup}
+;-;-;-;-;-;-
+xbutton1::sendInput, {wheeldown}
+LALT & Up::
+mult:=-3
+goto mvwin3
+LALT & Down::
+mult:=3
+mvwin3:
+wingetactivestats, title, w, h, x, y
+ymult:=y+mult
+winmove, A, , %x%, %ymult% 
+return
+
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+;-;-;-;-;-;- get coords idk why
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+
+
+
+;-;-;-;-;-;-
+;-;-;-;-;-;-Capslock & 8::send, %clipboard%
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+;-;-;-;-;-;-;-;-;-;-;- move window to specific size and coordinates ;-;-;-;-;-;-
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+Capslock & del::
+MouseGetPos, mx, my
+wingetactivestats, title, w, h, x, y
+inputbox, in, X and Y, Input X`, Y for window SIZE. `nWindow stats: W - %w% H - %h%,, 275, 175, mx, my
+inys:=RegExReplace(in, "\d+\,\s?", "")
+inxs:=RegExReplace(in, ",\s?\,\d+", "")
+MouseGetPos, mx, my
+wingetactivestats, title, w, h, x, y
+inputbox, in, X and Y, Input X`, Y for window MOVE. `nWindow stats: W - %w% H - %h%,, 275, 175, mx, my
+iny:=RegExReplace(in, "\d+\,\s?", "")
+inx:=RegExReplace(in, ",\s?\,\d+", "")
+winmove, A, , %inx%, %iny%, %inxs%, %inys%
+return
+
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+;-;-;-;-;-;-;-;-;-;-;-;- run a regedit to swap notepad default font on open, - for custom 0 for default
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+Capslock & 0::
+Run, cmd.exe /c taskkill /f /im Notepad.exe
+Run, cmd.exe /c regedit.exe /S c:\ProgramData\SerbzOSD\reg.reg
+sleep 1500
+run, notepad.exe
+return
+Capslock & -::
+Run, cmd.exe /c taskkill /f /im Notepad.exe
+Run, cmd.exe /c regedit.exe /S c:\ProgramData\SerbzOSD\fuck.reg
+FileSelectFile, txtfileDir
+Run, notepad.exe /W %txtfileDir%
+return
+RALT & RCTRL::
+MonArray:=monitorFunc()
+Height := % MonArray[5]
+Width := % MonArray[6]
+curMonTop := MonArray[1]
+curMonLeft := MonArray[2]
+if (Height != 1080 and Width != 1920) {
+; and curMonTop = 0 and curMonLeft = 0) {
+	;Run, cmd.exe /c %A_ScriptDir%\ChangeScreenResolution.exe /w=1920 /h=1080 /d=1 
+	Run, cmd.exe /c %A_ScriptDir%\ChangeScreenResolution.exe /w=1920 /h=1080 /d=0 
+	;&& Pause
+} else if (curMonTop = 0 and curMonLeft = 0) {
+	;Run, cmd.exe /c %A_ScriptDir%\ChangeScreenResolution.exe /w=2136 /h=1200 /d=1 
+	Run, cmd.exe /c %A_ScriptDir%\ChangeScreenResolution.exe /w=2136 /h=1200 /d=0 
+	;&& Pause
+}
+return
+
+
+~$^lbutton::
+mbfval++
+while mbfval <= 0
+{
+	sleep, 1
+	mbuttonval++
+	}
+if mbfval >= 1 
+{
+	3String = %mbuttonval%, %mbfval%
+	3Time:=40*2
+	GuiConF(3,3,3String,-1)
+	mbfval:=-1
+	mbuttonval:=0
+}
+return
+
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+;-;-;-;-;-;- The same thing different? idfk
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+capslock & [::
+;check color
+MouseGetPos, MgetX, MgetY
+MgetX2:=MgetX+10
+MgetY2:=MgetY+10
+inputbox, value, CheckColor, Enter a hex value ie. CFBEEF or 654321, , 200, 125, MgetX2, MgetY2
+GuiSpecificColor(3,value)
+decVal := % HexToDec(value)
+3String=Hex: %value% |/-\| Decimal: %decVal%
+3Time:=40*5 ;; 40 = 1 second
+GuiConF(3,3,3String,-1)
+sleep, 5000
+GuiWhiteColor(3)
+return
+
+useless:
+counter:=0
+counter2:=0
+match:=0
+file1Array:=Array()
+
+		3String=Select the file to check for duplicates.
+        3Time:=40*5 ;; 40 = 1 second
+        GuiConF(3,3,3String,-1)
+		sleep, 1000
+FileSelectFile, file1
+		3String=Select the duplicate string list.
+        3Time:=40*2 ;; 40 = 1 second
+        GuiConF(3,3,3String,-1)
+		sleep, 1000
+FileSelectFile, file2
+
+file:=file1
+fileLoad:
+Loop, read, %file%
+{
+		total_lines = %A_Index%
+}
+while (counter < total_lines) {
+	counter++
+	FileReadLine, OutputVar, %file%, %counter%
+	{
+		if (file==file1) {
+			file1Array.insert(OutputVar)
+			3String=[%counter%/%total_lines%] %OutputVar%
+			3Time:=40*2 ;; 40 = 1 second
+			GuiConF(3,3,3String,-1)
+
+		} else {
+			fml = file1Array.maxindex()
+			for key, val in file1Array
+			{
+				if (val==OutputVar) {
+					file1Array.RemoveAt(key)
+					3String=[%key%/%fml%] %OutputVar%
+					3Time:=40*2 ;; 40 = 1 second
+					GuiConF(3,3,3String,-1)
+					break
+				}
+			}
+		}
+		}
+		}
+
+if (file==file1) {
+	file := file2
+	counter:=0
+	goto fileLoad
+}
+file:=""
+for key, val in file1Array
+{
+	file=%file%`n%val%
+}
+filename1:=SubStr(file1, 1, StrLen(file1)-4)
+filename=%filename1%.new
+filename1:=SubStr(file1, StrLen(file1)-4, StrLen(file1)) 
+filename=%filename%%filename1%
+fileAppend, %file%, %filename%
+return
+
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+
+
+;;;;;;Change keyset
+Capslock & space::
+if (KeysSet=2) {
+KeysSet:=1
+        3String=On screen display
+        3Time:=40*2 ;; 40 = 1 second
+        GuiConF(3,3,3String,-1)
+} else if (KeysSet == 1) {
+KeysSet:=2
+        3String=Window Management
+        3Time:=40*2 ;; 40 = 1 second
+        GuiConF(3,3,3String,-1)
+} else {
+KeysSet:=3
+        3String=Runelite Stuff
+        3Time:=40*2 ;; 40 = 1 second
+        GuiConF(3,3,3String,-1)
+}
+return
+
+;-;-;-;-;-;- 
+
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+;-;-;-;-;-;- MACRO BUILDER STUFF  ;-;-;-;-;-;-;-;-;-;-;-;-
+;-;-;-;-;-;-;-;-;-;-;-;- Still global keys btw
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+
+
+
+numpadDot::run, "E:\God_Proof\Document\PyTIR\PyTIR.bat"
+numpad0::
+;run, taskkill /f /im "python.exe"
+sleep, 250
+run, "E:\God_Proof\Document\AUDIOPROJ\aud.py.bat"
+;run python "E:\God_Proof\Document\AUDIOPROJ\aud.py"
+return
+;numpad1::
+;run, mspaint.exe "D:\Tools\Scripts\PyTIR\test0.png"
+;run, mspaint.exe "D:\Tools\Scripts\PyTIR\test1.png"
+;return
+;-;-;-;-;-;- Clear
+LCTRL & CAPSLOCK::
+keywait CAPSLOCK
+xmcoordArray := []
+ordercoordArray := []
+; ymcoordArray := []
+        3String=cleared.
+        3Time:=40*2 ;; 40 = 1 second
+        GuiConF(3,3,3String,-1)
+return
+
+;-;-;-;-;-;- left click add
+LALT & Q::
+
+;for key, val in xmcoordArray
+;{
+;	clipboard = %clipboard% %key%`, %val%`,
+;	
+;}
+;clipboard=%clipboard%`n
+;for key, val in ymcoordArray
+;{
+;	clipboard = %clipboard% %key%`, %val%`,
+;	
+;}
+if (xmcoordArray.MaxIndex() > 1) {
+	mousegetpos, x, y
+	x1v := % xmcoordArray[1]
+	y1v := % ymcoordArray[1]
+	xmcoordArray[1]:=x
+	ymcoordArray[1]:=y
+	x1v := x-x1v
+	y1v := y-y1v
+
+	for key, val in ymcoordArray
+	{
+		if (key > 1) {
+			yv := val+y1v
+			xv := % xmcoordArray[key]
+			xv := xv+x1v
+			xmcoordArray[key]:=xv
+			ymcoordArray[key]:=yv
+		}
+	}
+}
+;clipboard=%clipboard%`n
+;for key, val in xmcoordArray
+;{
+;	clipboard = %clipboard% %key%`, %val%`,
+;	
+;}
+;clipboard=%clipboard%`n
+;for key, val in ymcoordArray
+;{
+;	clipboard = %clipboard% %key%`, %val%`,
+;
+;}
+goto macroplay
+;return
+LCTRL & q::
+gosub, markerPlaceOffsetSkip
+	keywait Q
+	counter := 0
+	mousegetpos, x, y
+	for each in xmcoordArray{
+		counter+=1
+	}
+	xmcoordArray[counter+1]:=x
+	ymcoordArray[counter+1]:=y
+	ordercoordArray[counter+1]:=1
+	3String=%x%, %y%
+	3Time:=40*2 ;; 40 = 1 second
+	GuiConF(3,3,3String,-1)
+return
+
+;-;-;-;-;-;- right click add
+LCTRL & E::
+gosub, markerPlaceOffsetSkip
+	keywait E
+	counter := 0
+	mousegetpos, x, y
+	for each in xmcoordArray{
+		counter+=1
+	}
+	xmcoordArray[counter+1]:=x
+	ymcoordArray[counter+1]:=y
+	ordercoordArray[counter+1]:=0
+	3String=%x%, %y%
+	3Time:=40*2 ;; 40 = 1 second
+	GuiConF(3,3,3String,-1)
+return
+
+;-;-;-;-;-;- Mouse move add
+LCTRL & R::
+gosub, markerPlaceOffsetSkip
+	keywait R
+	counter := 0
+	mousegetpos, x, y
+	for each in xmcoordArray{
+		counter+=1
+	}
+	xmcoordArray[counter+1]:=x
+	ymcoordArray[counter+1]:=y
+	ordercoordArray[counter+1]:=2
+	3String=%x%, %y%
+	3Time:=40*2 ;; 40 = 1 second
+	GuiConF(3,3,3String,-1)
+return
+
+;-;-;-;-;-;- Play macro
+LCTRL & w::
+macroplay:
+	3String=play
+	3Time:=40*2 ;; 40 = 1 second
+	GuiConF(3,3,3String,-1)
+	keywait w
+	send, {ctrl up}{w up}
+	sleep, 150
+	mousegetpos, xx2, yy2
+	blockinput, on
+	counter = 0
+	for each, key in xmcoordArray {
+	
+		counter += 1
+		xx := key
+		yy := ymcoordArray[counter]
+		oo := ordercoordArray[counter]
+		;y := ymcoordArray[counter]
+		3String=%xx%, %yy%
+		3Time:=40*2 ;; 40 = 1 second
+		GuiConF(3,3,3String,-1)
+		if (ordercoordArray[counter] == 3) {
+			mousemove, %xx%, %yy%
+		}
+		if (ordercoordArray[counter] == 0) {
+			mousemove, %xx%, %yy%
+			send, {RButton}
+			sleep, 250
+		} else { 
+			click, %xx%, %yy%
+			
+			sleep, mdelaycount
+		}
+		;gosub, markerPlaceOffsetSkip
+	}
+	blockinput, off	
+	mousemove, xx2, yy2
+	send, {return}
+return
+
+;-;-;-;-;-;- Change macro playback speed
+ctrl & numpadadd::
+mdelaycount+=50
+        3String=%mdelaycount%
+        3Time:=40*2 ;; 40 = 1 second
+        GuiConF(3,3,3String,-1)
+return
+ctrl & numpadsub::
+mdelaycount-=50
+        3String=%mdelaycount%
+        3Time:=40*2 ;; 40 = 1 second
+        GuiConF(3,3,3String,-1)
+return
+
+
+
+
+
+
+
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+#If MouseSetVar=2 and InitFinish=1 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+
+
+RButton & Capslock::
+while (getkeystate("Capslock","P")) {
+	sleep, 5
+	if getkeystate("LButton", "P")
+		send, {LButton}
+	gosub markerPlaceOffsetSkip
+}
+return
+
+LALT & LButton::
+MouseGetPos,x,y, itsokay
+wingetpos, x1, y2, w, h, ahk_id %itsokay%
+x3:=x-x2
+y3:=y-y2
+while (getkeystate("LButton","p") and getkeystate("LALT","p")) {
+MouseGetPos, x, y
+x4:=x3-x
+y4:=y4-y
+winmove, ahk_id %itsokay%, , %x4%, %y4%
+}
+
+#If MouseSetVar=3 and InitFinish=1
+coordsText:
+if (counterText = "" or counterText < 0) {
+	counterText := 0
+}
+counterText+=1
+ifExist, %A_ScriptDir%\python310\coordsText.txt
+{
+	fileRead, out, %A_ScriptDir%\python310\coordsText.txt
+	clipboard = %clipboard%`nCoordsText: `n%out%
+	fileDelete, %A_ScriptDir%\python310\coordsText.txt
+	setTimer, coordsText, off
+}
+if (counterText >= 3) {
+	setTimer, coordsText, off
+	counterText := 0
+}
+return
+
+LALT & LButton::
+	ifExist, %A_ScriptDir%\python310\imgread.py
+	{
+		ifExist, %A_ScriptDir%\python310\cards.txt
+		{
+			fileDelete, %A_ScriptDir%\python310\cards.txt
+		}
+		ifExist, %A_ScriptDir%\python310\python.exe
+		{
+			FileSelectFile, cardsDir
+			fileAppend,%cardsDir%, %A_ScriptDir%\python310\cards.txt
+			sleep, 250
+			run, cmd /c %A_ScriptDir%\python310\python.exe %A_ScriptDir%\python310\imgread.py
+			3String = Processing %cardsDir%...
+			3Time:=40*5
+			GuiConF(3,3,3String,-1)
+		}
+
+}
+return
+
+~Ctrl & LButton::
+gosub markerPlace
+coordCalcCounter+=1
+if (coordCalcCounter >= 4 or coordCalcCounter <= 0 or coordCalcCounter = "") {
+	coordCalcCounter := 1
+	clipboard := 
+	gosub markerClear
+	gosub markerPlace
+}
+if (coordCalcCounter = 1) {
+	mousegetpos, ccx1, ccy1
+	coordCalc3string = %ccx1%, %ccy1%
+	clipboard=%A_scriptdir%`n`n%ccx1%, %ccy1%`n.clickc %ccx1% %ccy1%`n`n
+} else if (coordCalcCounter = 2) {
+	mousegetpos, ccx2, ccy2
+	coordCalc3string = %ccx1%, %ccy1% | %ccx2%, %ccy2%
+	mx:=ccx2-ccx1
+	my:=ccy2-ccy1
+	clipboard=%clipboard% `n%ccx1%, %ccy1% | %ccx2%, %ccy2%`ndifferences:x2-x1=%mx% y2-y1=%my%`n.imgread %ccx1%,%ccy1%,%ccx2%,%ccy2%`n`n
+	ifExist, %A_ScriptDir%\python310\imgread.py
+	{
+		ifExist, %A_ScriptDir%\python310\coords.txt
+		{
+			fileDelete, %A_ScriptDir%\python310\coords.txt
+		}
+		ifExist, %A_ScriptDir%\python310\python.exe
+		{
+			fileAppend,%ccx1%`|%ccy1%`|%ccx2%`|%ccy2%, %A_ScriptDir%\python310\coords.txt
+			sleep, 250
+			run, cmd /c start /min %A_ScriptDir%\python310\python.exe %A_ScriptDir%\python310\imgread.py
+		}
+		setTimer, coordsText, 1000
+		setTimer, coordsText, On
+	}
+} else if (coordCalcCounter = 3) {
+	mousegetpos, ccx3, ccy3
+	coordCalc3string = %ccx1%, %ccy1% | %ccx2%, %ccy2% | %ccx3%, %ccy3%
+	x3_1 := % ccx1 + (ccx2 - ccx1)
+	y3_1 := % ccy1 + (ccy2 - ccy1)
+	x3_2 := % ccx2 + (ccx3 - ccx2)
+	y3_2 := % ccy2 + (ccy3 - ccy2)
+	x3_3 := % ccx1 + (ccx3 - ccx1)
+	y3_3 := % ccy1 + (ccy3 - ccy1)
+	mx1:=ccx2-ccx1
+	my1:=ccy2-ccy1
+	mx2:=ccx3-ccx2
+	my2:=ccy3-ccy2
+	mx3:=ccx3-ccx1
+	my3:=ccy3-ccy1
+	clipboard = %clipboard% `n%ccx1%, %ccy1% | %ccx2%, %ccy2% | %ccx3%, %ccy3%`ndifferences:`nx2-x1=%mx1% y2-y1=%my1%`nx3-x2=%mx2% y3-y2=%my2%`nx3-x1=%mx3% y3-y1=%my3%`n
+	clipboard = %clipboard%----`nx`, y `= await coordImg`(ctx,HomeDir `+ r`'`\ImageSearch`\PATHHERE`'`,`"anything`"`)`nx1 `= x `+ `(%x3_1%`)`ny1 `= y `+ `(%y3_1%`)`nx2 `= x `+ `(%x3_2%`)`ny2 `= y `+ `(%y3_2%`)`nreadString `= await readImage`(x1`,y1`,x2`,y2`,False`,`"chrome`"`)
+}
+
+	3String = %coordCalc3string%
+	3Time:=40*5
+	GuiConF(3,3,3String,-1)
+return
+
+
+
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+
+
+
+
+
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+
+
+
+
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+
+#If (MouseSetVar=1 or MouseSetVar=4) and InitFinish=1 and SynActive = 1
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+
+
+;ImageSearch, OutputVarX, OutputVarY, X1, Y1, X2, Y2, ImageFile
+
+CTRL & F2::
+;wingetactivestats, title, 2, 3, 4, 5
+WinSet, Transparent, off, A
+return
+CTRL & F1::
+;wingetactivestats, title, 2, 3, 4, 5
+WinSet, Transcolor, 0x010101, A
+return
+
+^c::
+send, ^c
+sleep, 100
+i:=""
+3String=Press C to save to clipboard
+3Time:=40*2 ;; 40 = 1 second
+GuiConF(3,3,3String,-1)
+input, i, L1 M T1
+
+if (i=="c") {
+
+	
+clipBoardA.insert(clipboard)
+strStrstrstrstsrsrstsrtsr = added %clipboard%
+        3String=`[%clipCounter%`] `- %strStrstrstrstsrsrstsrtsr% to clipboard array`.
+        3Time:=40*2 ;; 40 = 1 second
+        GuiConF(3,3,3String,-1)
+        sleep 20
+        clipLimit:=0
+		clipCounter++
+for key, val in clipBoardA
+    clipLimit++
+		if clipCounter < 1 
+			clipCounter:=clipLimit
+		if clipCounter > clipLimit
+			clipCounter:=1
+ifExist, %A_ScriptDir%\SerbzOSD\clipboard.txt
+    fileDelete, %A_ScriptDir%\SerbzOSD\clipboard.txt
+for key, val in clipBoardA
+    fileAppend, %val%|, %A_ScriptDir%\SerbzOSD\clipboard.txt
+} else {
+	send, % i
+}
+return
+
+CTRL & Space::
+keywait, Space
+if (MouseSetVar == 1) {
+strStrtsrtsr := % clipBoardA[clipCounter]
+clipBoardA.remove(clipCounter)
+		if clipCounter=0
+		{
+			3String=There is nothing on the clipboard array.
+					3Time:=40*2 ;; 40 = 1 second
+			GuiConF(3,3,3String,-1)
+			return
+		} 
+		else
+		{		
+		3String=`[%clipCounter%`] `- %strStrtsrtsr% removed from clipboard array`.
+        }
+		3Time:=40*2 ;; 40 = 1 second
+        GuiConF(3,3,3String,-1)
+        clipLimit:=0
+clipCounter--
+for key, val in clipBoardA
+    clipLimit++
+		if clipCounter < 1 
+			clipCounter:=clipLimit
+		if clipCounter > clipLimit
+			clipCounter:=1
+ifExist, %A_ScriptDir%\SerbzOSD\clipboard.txt
+    fileDelete, %A_ScriptDir%\SerbzOSD\clipboard.txt
+for key, val in clipBoardA
+    fileAppend, %val%|, %A_ScriptDir%\SerbzOSD\clipboard.txt
+} else { 
+3String = Type a number for the pass to change, Q to confirm
+3Time:=40*2
+GuiConF(3,3,3String,-1)
+pwchcrVar:=""
+pwchcrVar1:=""
+pwchcrVar2:=""
+pwTimer:=0
+setTimer, pwFuckWhat, 100
+gosub, pwFuckWhat
+}
+return
+
+capslock & k::
+Capslock & WheelDown::
+clipCounter--
+	if (MouseSetVar==1) {
+		astring=clipboard
+		alimit:=clipLimit
+	} else {
+		astring=password
+		alimit:=pwlimit
+	}
+if (clipCounter < 1)
+		clipCounter:=alimit
+goto clipboardACont
+
+
+capslock & I::
+Capslock & WheelUp::
+	clipCounter++
+	if (MouseSetVar==1) {
+		alimit:=clipLimit
+	} else {
+		alimit:=pwlimit
+	}
+	if (clipCounter > alimit)
+		clipCounter:=1 ;ahk starts with 1 not 0 which is odd anyway
+
+clipboardACont:
+	if (MouseSetVar==1) {
+		astring=clipboard
+	} else {
+		astring2 := % pwFileList[clipCounter]
+		astring2 := SubStr(astring2, 1, StrLen(astring2)-4)
+		astring=password for %astring2%
+	}
+	if (alimit==0) {
+			3String=Nothing on %astring% array.
+			3Time:=40*1 ;; 40 = 1 second
+			GuiConF(3,3,3String,-1)
+			return		
+	}
+	if (MouseSetVar==1) {
+		clipboard := % clipBoardA[clipCounter]
+		strestwaers := % clipBoardA[clipCounter] 
+	} else {
+		for key, val in pwFileList {
+
+			if (key == clipCounter) {
+				fileRead, varvar, %pwDirVar%%val%
+				clipboard := varvar
+				break
+			}
+		}
+		;clipboard := % pwlist[clipCounter]
+		strestwaers = %astring% (1 paste)
+		1paste := True
+	}
+	3String=`[%clipCounter%`/%alimit%`] - %strestwaers%
+	3Time:=40*1 ;; 40 = 1 second
+	GuiConF(3,3,3String,-1)
+return
+
+
+
+pwFuckWhat:
+if (pwchcrVar2=="q") { ; or pwTimer > 50) {
+	pwchcrVar := SubStr(pwchcrVar, 1, StrLen(pwchrVar)-1)
+	gosub, pwOpt
+	setTimer, pwFuckWhat, off
+	return
+}
+
+if (pwInActive==False) {
+	pwInActive:=True
+	input, pwchcrVar2, L1 M
+	;pwCounterVar++
+	pwInActive:=False
+	pwchcrVar=%pwchcrVar%%pwchcrVar2%
+	3String=%pwchcrVar%
+	3Time:=40*1 ;; 40 = 1 second
+	GuiConF(3,3,3String,-1)
+}
+pwchcrVar1:=
+return
+
+backuppw:
+FileCopy, %pwDirVar%%file%, %pwDirVar%backups\%file%_%TimeString%.txt
+FileDelete, %pwDirVar%%file%
+return
+
+newpwgenbox:
+
+return
+
+pwOpt:
+pwlimit:=pwFunc(0)
+file:=""
+pw:=""
+label:=""
+deleteYesOpt := False
+
+
+FormatTime, TimeString,, MMdyyyyhhmmss
+if (pwchcrVar <= pwFileList.maxIndex()) {		
+	for key, val in pwFileList {
+		if (key == pwchcrVar) {
+			file := pwFileList[key]
+			3String= %pwchcrVar% - Selected - %file%
+			3Time:=40*3 ;; 40 = 1 second
+			GuiConF(3,3,3String,-1)
+			break
+		}
+	}
+	ifExist, %pwDirVar%%file%
+		{
+			MsgboxMove_String=Delete or Replace with new password?
+			ChangeBtnNames:=1
+			Btn1_Name=DELETE ; YES
+			Btn2_Name=REPLACE ; ELSE
+			SetTimer, MsgboxMove, on
+			MsgBox, 4, %MsgboxMove_String%, Choose a button:
+			IfMsgBox, YES
+			{
+				deleteYesOpt := True
+			}
+			gosub, backuppw
+			sleep, 100
+			if (deleteYesOpt = True) {
+				pwlimit:=pwFunc(0)
+				3String= DELETED - %file%
+				3Time:=40*3 ;; 40 = 1 second
+				GuiConF(3,3,3String,-1)
+				return
+			}
+		}
+	MsgboxMove_String=Special Characters or None?
+	ChangeBtnNames:=1
+	Btn1_Name=Special ; YES
+	Btn2_Name=None ; ELSE
+	SetTimer, MsgboxMove, on
+	MsgBox, 4, %MsgboxMove_String%, Choose a button:
+	IfMsgBox, YES 
+		newPW := % RandomStr(Rand(12,15))
+	else 
+		newPW := % rsPwStr()
+	Run, cmd.exe /c move %pwDirVar%%file% %pwDirVar%backups\%TimeString%%file%
+	Run, powershell -c touch %pwDirVar%%file%
+	sleep, 500
+	fileAppend, %newPW%, %pwDirVar%%file%
+
+} 
+if (file=="" and deleteYesOpt = False) {
+	MsgboxMove_String=Special Characters or None?
+	ChangeBtnNames:=1
+	Btn1_Name=Special ; YES
+	Btn2_Name=None ; ELSE
+	SetTimer, MsgboxMove, on
+	MsgBox, 4, %MsgboxMove_String%, Choose a button:
+	IfMsgBox, YES 
+		newPW := % RandomStr(Rand(12,15))
+	else 
+		newPW := % rsPwStr()
+	inputbox, pwname, Password Label, enter a password label, , 200, 125, MgetX2, MgetY2
+	ifExist, %pwDirVar%%pwname%.txt
+	{
+		FileCopy, %pwDirVar%%pwname%.txt, %pwDirVar%backups\%pwname%_%TimeString%.txt
+		FileDelete, %pwDirVar%%pwname%.txt
+	}
+	WinGetActiveTitle, title
+	title2:=powershell
+	ifInString, title2, %title%, WinMinimize, %title%
+	fileAppend, %newPW%, %pwDirVar%%pwname%.txt
+
+
+	pwlimit:=pwFunc(0)
+} 
+if (deleteYesOpt = True) {
+	3String=Password #%pwchcrVar% not found.
+	3Time:=40*22 ;; 40 = 1 second
+	GuiConF(3,3,3String,-1)
+}
+setTimer, pwOpt, off
+return
+pwFunc(var) {
+global pwFileList
+global CS
+global pwDirVar
+	FileDelete, %A_ScriptDir%\SerbzOSD\pwfilelist.txt
+	sleep, 500
+	Run, cmd.exe /c dir /b %pwDirVar% >>  %A_ScriptDir%\SerbzOSD\pwfilelist.txt
+	sleep, 500
+	counter:=1
+	pwFileList:=[]
+
+	Loop, read, %A_ScriptDir%\SerbzOSD\pwfilelist.txt
+	{
+			total_lines3 = %A_Index%
+	}
+
+	while (counter < total_lines3) {
+		counter++
+		FileReadLine, OutputVar, %A_ScriptDir%\SerbzOSD\pwfilelist.txt, counter
+		{
+			if (OutputVar != "" and OutputVar != "backups") {
+				pwFileList.insert(OutputVar)
+			}
+		}
+	}
+	pwlimit:=pwFileList.maxindex()
+	;msgbox, % pwlimit
+	return pwlimit
+}
+
+
+
+#If NoAHKVars = 0 and InitFinish=1 and SynActive = 1
+
+#LALT::
+keywait, LALT
+keyWait, RALT
+if (MouseSetVar == 1) {
+	MouseSetVar := 4
+	3String = Passwords Active. CTRL+Space to remove/add/change entries.
+	3Time:=40*2
+	GuiConF(3,3,3String,-1)
+} else {
+	MouseSetVar := 1
+	3String = Clipboard Array Active. CTRL+Space to remove entries.
+	3Time:=40*3
+	GuiConF(3,3,3String,-1)
+}
+return
+
+
+#If MouseSetVar=4 and InitFinish=1
+^v::
+if (clipboard=="" or clipboard== or 1Paste==False) {
+MouseSetVar:=1
+goto ctrlV
+}
+	3String = Press C to confirm password Paste, anything else to cancel. 
+	3Time:=40*2
+	GuiConF(3,3,3String,-1)
+i=None
+input, i, L1 M T3
+if (i=="c") {
+	sleep, 250
+	SendRaw, %clipboard%
+}
+if (1paste == True) {
+	1paste:=False
+	if (i!="c") {
+		3String = Timed Out. Clipboard Cleared.
+		3Time:=40*2
+		GuiConF(3,3,3String,-1)
+	}
+	clipboard:=""
+} else { 
+send, % i
+}
+	MouseSetVar := 1
+	3String = Clipboard Array Active.
+	3Time:=40*2
+	GuiConF(3,3,3String,-1)
+i=None
+return
+#If MouseSetVar = 1 and InitFinish=1
+~^v::
+ctrlV:
+if (1paste==True)
+	1paste:=False
+return
+
+
+
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+
+
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------
+;;;#If KeysSet = 3 and InitFinish=1 ;-------------------------------------;-------------------------------------;-------------------------------------
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------
+
+Ralt & J::
+soundEnter := 1
+;Ralt & L::
+ifNotExist, %A_ScriptDir%\Logins
+	run, cmd.exe /c mkdir %A_ScriptDir%\Logins
+filedelete, %A_ScriptDir%\Logins\wood.log
+;;GroupAdd, GroupName , WinTitle, WinText, Label, ExcludeTitle, ExcludeText
+GroupAdd, RuneliteDW, RuneLite, , , , Serbz, -
+GroupAdd, RuneliteD, RuneLite
+WinGet, RuneliteDWindowCount, Count, ahk_group RuneliteD
+Keywait, RAlt
+superlog :=1
+pwvar :=1
+BlockInput, on
+mousegetpos, m2x, m2y
+mousemove, 960, 540
+Goto superlog1
+
+
+;-------------------------------------
+
+	monstats:
+	monstats:=monitorFunc()
+	monH:=monstats[5]-35
+	monW:=monstats[6]
+    return
+	
+
+	!#1::
+	gosub, monstats
+	sleep, 25
+	mousegetpos, xmm, ymm
+	wingetactivestats,t,t,t, x, y
+	MouseMove, x+10, y+10
+	MouseGetPos,,,RuneAcc_UID_T
+	MouseMove, xmm, ymm
+	RuneAcc_UID["SerbzA"] := RuneAcc_UID_T
+    WinMove A, , 0, 0, (monW/3), (monH/2)-6
+    if (pwvar=1) {
+        goto A_D_move
+    }
+    return	
+	
+	!#2::
+	gosub, monstats
+	sleep, 25
+	mousegetpos, xmm, ymm
+	wingetactivestats,t,t,t, x, y
+	MouseMove, x+10, y+10
+	MouseGetPos,,,RuneAcc_UID_T
+	MouseMove, xmm, ymm
+	RuneAcc_UID["SerbzA"] := RuneAcc_UID_T
+    WinMove A, , (monW/3), 0, (monW/3), (monH/2)-6
+    if (pwvar=1) {
+        goto A_D_move
+    }
+    return
+	
+	#1::
+    A_move:
+	gosub, monstats
+	sleep, 25
+	mousegetpos, xmm, ymm
+	wingetactivestats,t,t,t, x, y
+	MouseMove, x+10, y+10
+	MouseGetPos,,,RuneAcc_UID_T
+	MouseMove, xmm, ymm
+	RuneAcc_UID["SerbzA"] := RuneAcc_UID_T
+    WinMove A, , 0, 0, (monW/2), (monH/2)-6
+    if (pwvar=1) {
+        goto A_D_move
+    }
+    return
+ 
+    #2::
+    B_move:	
+	gosub, monstats
+	sleep, 25
+	mousegetpos, xmm, ymm
+	wingetactivestats,t,t,t, x, y
+	MouseMove, x+10, y+10
+	MouseGetPos,,,RuneAcc_UID_T
+	MouseMove, xmm, ymm
+	RuneAcc_UID["SerbzB"] := RuneAcc_UID_T
+    WinMove A, , 0, (monH/2)-6, monW/2, (monH/2)-3
+    if (pwvar=1) {
+        goto B_D_move
+    }
+    return
+ 
+	#a::
+	gosub, monstats
+	sleep, 25
+	mousegetpos, xmm, ymm
+	wingetactivestats,t,t,t, x, y
+	MouseMove, x+10, y+10
+	MouseGetPos,,,RuneAcc_UID_T
+	MouseMove, xmm, ymm
+	;;RuneAcc_UID["SerbzE"] := RuneAcc_UID_T
+    ;;WinMove A, , 800, 655, 800, 655 ;;-- Laptop
+    WinMove A, , (monW/2), 0, (monW/2), (monH/2)-6
+    if (pwvar=1) {
+        goto E_D_move
+    }
+    return
+	
+	#3::
+	C_move:
+	gosub, monstats
+	sleep, 25
+	mousegetpos, xmm, ymm
+	wingetactivestats,t,t,t, x, y
+	MouseMove, x+10, y+10
+	MouseGetPos,,,RuneAcc_UID_T
+	MouseMove, xmm, ymm
+	;;RuneAcc_UID["SerbzE"] := RuneAcc_UID_T
+    ;;WinMove A, , 800, 655, 800, 655 ;;-- Laptop
+    WinMove A, , (monW/2), (monH/2)-6, (monW/2)-10, (monH/2)-3
+    if (pwvar=1) {
+        goto E_D_move
+    }
+    return	
+	
+	#4::
+	gosub, monstats
+	sleep, 25
+	mousegetpos, xmm, ymm
+	wingetactivestats,t,t,t, x, y
+	MouseMove, x+10, y+10
+	MouseGetPos,,,RuneAcc_UID_T
+	MouseMove, xmm, ymm
+	;;RuneAcc_UID["SerbzE"] := RuneAcc_UID_T
+    ;;WinMove A, , 800, 655, 800, 655 ;;-- Laptop
+    WinMove A, , (monW/2)+10, (monH/2)-6, (monW/2)-10, (monH/2)-3
+    if (pwvar=1) {
+        goto E_D_move
+    }
+    return
+ 
+	#s::
+	gosub, monstats
+	sleep, 25
+	mousegetpos, xmm, ymm
+	wingetactivestats,t,t,t, x, y
+	MouseMove, x+10, y+10
+	MouseGetPos,,,RuneAcc_UID_T
+	MouseMove, xmm, ymm
+	;;RuneAcc_UID["SerbzE"] := RuneAcc_UID_T
+    ;;WinMove A, , 800, 655, 800, 655 ;;-- Laptop
+    WinMove A, , (monW/2), (monH/2)-6, (monW/2), (monH/2)-3
+    if (pwvar=1) {
+        goto E_D_move
+    }
+    return
+ 
+ 
+    ;#e::
+    D_move:
+	;gosub, monstats
+	;sleep, 25
+	;mousegetpos, xmm, ymm
+	;wingetactivestats,t,t,t, x, y
+	;MouseMove, x+10, y+10
+	;MouseGetPos,,,RuneAcc_UID_T
+	;MouseMove, xmm, ymm
+	;RuneAcc_UID["SerbzD"] := RuneAcc_UID_T
+    ;;;WinMove A, , 1600, 655, 800, 655 ;;-- Laptop
+    ;WinMove A, , (monW/3)*2, monH/2, monW/3, monH/2
+    ;if (pwvar=1) {
+    ;    goto D_D_move
+    ;}
+    return
+ 
+    #w::
+    E_move:
+	gosub, monstats
+	sleep, 25
+	mousegetpos, xmm, ymm
+	wingetactivestats,t,t,t, x, y
+	MouseMove, x+10, y+10
+	MouseGetPos,,,RuneAcc_UID_T
+	MouseMove, xmm, ymm
+	RuneAcc_UID["SerbzE"] := RuneAcc_UID_T
+    ;;WinMove A, , 800, 655, 800, 655 ;;-- Laptop
+    WinMove A, , monW/2, 0, monW/2, monH-9
+    if (pwvar=1) {
+        goto E_D_move
+    }
+    return
+    
+    
+    #q::
+    F_move:
+	gosub, monstats
+	sleep, 25
+	mousegetpos, xmm, ymm
+	wingetactivestats,t,t,t, x, y
+	MouseMove, x+10, y+10
+	MouseGetPos,,,RuneAcc_UID_T
+	MouseMove, xmm, ymm
+	RuneAcc_UID["SerbzF"] := RuneAcc_UID_T
+    ;;WinMove A, , 0, 655, 800, 655 ;;-- Laptop
+    WinMove A, , 0, 0, monW/2, monH-9
+    if (pwvar=1) {
+        goto F_D_move
+    }
+    return
+	
+
+capslock & g::
+runwait, cmd.exe /c net stop synergy
+runwait, cmd.exe /c net start synergy
+return
+;-------------------------------------
+
+#b::
+
+
+    Keywait, LWin
+    Keywait, b
+
+    pwvar:=0
+    superlog:=0
+    sleep 200
+    send, %firstpartuser%
+    sleep 200
+    WinGetActiveTitle, TitleLogin
+    ;#########
+    Input, Outputvar, L1
+        if (Outputvar = "f") {
+            return
+        } else if (Outputvar = "1")  { ;;;; Serbz A
+                Goto, LoginSerbzA
+        } else if (Outputvar = "2")  { ;;;; Serbz B
+                Goto, LoginSerbzB     
+        } else if (Outputvar = "3")  { ;;;; Serbz C
+                Goto, LoginSerbzC
+        } else if (Outputvar = "4")  { ;;;; Serbz D
+                Goto, LoginSerbzD
+        } else if (Outputvar = "5")  { ;;;; Serbz E
+                Goto, LoginSerbzE    
+        } else if (Outputvar = "6")  { ;;;; Serbz F
+                Goto, LoginSerbzF    
+        } else if (Outputvar = "a")  { ;;;; Serbz G
+            send, q@%SerbzChristmas%{TAB}%pw1%
+        } else if (Outputvar = "s")  { ;;;; Serbz H
+            send, w@%SerbzChristmas%{TAB}%pw1%
+        } else if (Outputvar = "q")  { ;;;; Serbz I
+            send, a@%SerbzChristmas%{TAB}%pw1%
+        } else if (Outputvar = "w")  { ;;;; Serbz J
+            send, s@%SerbzChristmas%{TAB}%pw1%
+        } else if (Outputvar = "d")  { ;;;; Serbz KR
+            send, e@%SerbzChristmas%{TAB}%pw2%
+        } else if (Outputvar = "r")  { ;;;; Serbzy
+            send, r@%SerbzChristmas%{TAB}%pw3%
+        } else if (Outputvar = "c")  { ;;;; Serbz N
+            send, c@%SerbzChristmas%{TAB}%pw4%
+        } else if (Outputvar = "v")  { ;;;; Serbz O
+            send, v@%SerbzChristmas%{TAB}%pw5%
+        } else if (Outputvar = "t")  { ;;;; Serbz P
+            send, t@%SerbzChristmas%{TAB}%pw6%
+        } else if (Outputvar = "y")  { ;;;; Serbz Q
+            send, y@%SerbzChristmas%{TAB}%pw7%
+        } else if (Outputvar = "g")  { ;;;; Serbz R
+            send, g@%SerbzChristmas%{TAB}%pw8%
+        } else if (Outputvar = "h")  { ;;;; Serbz S
+            send, h@%SerbzChristmas%{TAB}%pw9%
+        } else if (Outputvar = "b")  { ;;;; Serbz U
+            send, b@%SerbzChristmas%{TAB}%pw10%
+        } else if (Outputvar = "n")  { ;;;; Serbz V
+            send, n@%SerbzChristmas%{TAB}%pw11%
+        } else if (Outputvar = "m")  { ;;;; Serbz W
+            send, m@%SerbzChristmas%{TAB}%pw12%
+        } else if (Outputvar = "j")  { ;;;; Serbz X
+            send, j@%SerbzChristmas%{TAB}%pw13%
+        } else if (Outputvar = "u")  { ;;;; Serbz Y
+            send, u@%SerbzChristmas%{TAB}%pw14%
+        } else if (Outputvar = "i")  { ; Serb Z
+            send, i@%SerbzChristmas%{TAB}%pw15%
+        } else if (Outputvar = "o")  { ; Serb L
+            send, o@%SerbzChristmas%{TAB}%pw15%
+        } else if (Outputvar = "p")  { ; Serb K
+            send, p@%SerbzChristmas%{TAB}%pw15%
+        } else if (Outputvar = "l")  { ; Serb M
+            send, l@%SerbzChristmas%{TAB}%pw15%
+        } else if (Outputvar = "z")  { ; Serbz BTW
+            send, uim1@%SerbzChristmas%
+            sleep 50
+            send, {TAB}%pw16%
+        }
+;}
+return
+;-------------------------------------
+LoginSerbzA:
+if (!IsLogin(0)) {
+		send, 1@%SerbzChristmas%
+		sleep, 100
+		send,{TAB}%SerbzA2%
+		sleep, 100
+        send, {enter}
+}
+if (superlog=1 or pwvar=1)
+    Goto, superlog2
+return
+;#########
+LoginSerbzB:
+
+if (!IsLogin(0)) {
+		send, 2@%SerbzChristmas%
+		sleep, 100
+		send,{TAB}%SerbzB2%
+		sleep, 100
+        send, {enter}
+}
+if (superlog=1 or pwvar=1)
+    Goto, superlog3
+return
+;#########
+LoginSerbzC:
+
+
+if (!IsLogin(0)) {
+		send, 3@%SerbzChristmas%
+		sleep, 100
+		send,{TAB}%SerbzC2%
+		sleep, 100
+        send, {enter}
+}
+if (superlog=1 or pwvar=1) 
+    Goto, superlog4
+return
+;#########
+LoginSerbzD:
+
+
+if (!IsLogin(0)) { 
+
+		send, 4@%SerbzChristmas%
+		sleep, 100
+		send,{TAB}%SerbzD2%
+		sleep, 100
+        send, {enter}
+}
+if (superlog=1 or pwvar=1) 
+    Goto, superlog5
+return
+;#########
+LoginSerbzE:
+
+
+if (!IsLogin(0)) { 
+
+		send, 5@%SerbzChristmas%
+		sleep, 100
+		send, {TAB}%SerbzE2%
+		sleep, 100
+        send, {enter}
+}
+if (superlog=1 or pwvar=1)
+    Goto, superlog6
+return
+;#########
+LoginSerbzF:
+
+
+if (!IsLogin(0)) {  
+
+		send, 6@%SerbzChristmas%
+		sleep, 100
+		send, {TAB}%SerbzF2%
+		sleep, 100
+        send, {enter}
+    soundEnter=0
+    soundplay, %A_ScriptDir%\CustomSound\Star Wars Episode II - The Clones at Kamino.wav
+}
+if (superlog=1 or pwvar=1)
+    goto, superlogfin
+return
+
+
+superlog1:
+groupActivate, RuneliteD, r
+sleep 258
+Winset, Style, -0xC00000, A
+goto A_move
+A_D_move:
+
+sleep 29
+if (pwvar=1) {
+sleep 250
+send, {tab}{enter}
+sleep 150
+send, %firstpartuser%
+goto, LoginSerbzA
+}
+sleep 28
+;#########
+
+superlog2:
+groupActivate, RuneliteD, r
+sleep 258
+Winset, Style, -0xC00000, A
+goto B_move
+B_D_move:
+if (!IsLogin(0))
+Goto superlog3
+sleep 29
+if (pwvar=1) {
+sleep 250
+send, {tab}{enter}
+sleep 150
+send, %firstpartuser%
+goto, LoginSerbzB
+}
+sleep 28
+;#########
+
+superlog3:
+groupActivate, RuneliteD, r
+sleep 258
+Winset, Style, -0xC00000, A
+goto C_move
+C_D_move:
+if (!IsLogin(0))
+Goto superlog4
+sleep 29
+if (pwvar=1) {
+sleep 250
+send, {tab}{enter}
+sleep 150
+send, %firstpartuser%
+
+
+goto, LoginSerbzC
+}
+sleep 28
+;#########
+
+
+
+
+superlog4:
+groupActivate, RuneliteD, r
+sleep 258
+Winset, Style, -0xC00000, A
+goto D_move
+D_D_move:
+if (!IsLogin(0))
+Goto superlog5
+sleep 29
+if (pwvar=1) {
+sleep 250
+send, {tab}{enter}
+sleep 150
+send, %firstpartuser%
+goto, LoginSerbzD
+}
+sleep 28
+;#########
+
+superlog5:
+groupActivate, RuneliteD, r
+sleep 258
+Winset, Style, -0xC00000, A
+goto E_move
+E_D_move:
+if (!IsLogin(0))
+Goto superlog6
+sleep 29
+if (pwvar=1) {
+sleep 250
+send, {tab}{enter}
+sleep 150
+send, %firstpartuser%
+goto, LoginSerbzE
+}
+sleep 200
+;#########
+
+superlog6:
+groupActivate, RuneliteD, r
+sleep 258
+Winset, Style, -0xC00000, A
+goto F_move
+F_D_move:
+if (!IsLogin(0)) {
+BlockInput, off
+    return
+}
+sleep 29
+if (pwvar=1) {
+sleep 250
+send, {tab}{enter}
+sleep 150
+send, %firstpartuser%
+goto, LoginSerbzF
+}
+superlogfin:
+pwvar :=0
+superlog:=0
+
+
+BlockInput, off
+mousemove, m2x, m2y
+
+goto, pinsgotothing
+
+return
+
+capslock & numpad7::
+pinsgotothing:
+Pin2Use:=""
+PinNum2Use:=""
+winauthRunning := 0
+counter := 0
+file=%A_scriptdir%\tasklist.txt
+ifExist, %file%
+	fileDelete, %file%
+run, cmd.exe /c tasklist >> %file%
+sleep, 250	
+Loop, read, %file%
+{
+		total_lines = %A_Index%
+}
+
+while (counter < total_lines) {
+	counter++
+	FileReadLine, OutputVar, %file%, %counter%
+	{											;.+?\.exe\s+[0-9]+\s?\w+\s+[0-9]\s+[0-9]+\,?[0-9]+\s?\w?
+		OutputVar2 := RegExReplace(OutputVar, "(.+?)((\.exe)|\s)+[0-9]+\s?\w+\s+[0-9]\s+[0-9]+\,?[0-9]+\s?\w?","$1")
+		if (OutputVar2 == "WinAuth") { 
+			winauthRunning := 1
+			3String=WinAuth is running.
+			3Time:=40*2 ;; 40 = 1 second
+			GuiConF(3,3,3String,-1)
+			break
+		}
+	}
+	
+}
+if (winauthRunning == 0) {
+goto skipwinauthrunning
+	ifExist, %drive1%:\Tools\WinAuth\WinAuth.exe
+	{
+		run, cmd.exe /c start %drive1%:\Tools\WinAuth\WinAuth.exe
+		3String=Launched WinAuth
+		3Time:=40*2 ;; 40 = 1 second
+		GuiConF(3,3,3String,-1)
+
+		sleep, 500
+		wingetactivetitle, title
+
+		while (title != "WinAuth") { 
+			wingetactivetitle, title
+			sleep, 100
+		}
+			ifExist, %pwDirVar%WinAuth.txt
+		{
+			fileRead, varvar, %pwDirVar%WinAuth.txt
+			wingetactivestats, title, w, h, x, y
+			if (title = "WinAuth" and w = 420 and h = 180) {
+				mousemove, x+92, y+107
+				sleep, 20
+				click
+				sleep, 350
+				sendRaw, %varvar%
+				varvar:=
+				sleep, 350
+				mousemove, x+337, y+109
+				sleep, 20
+				click
+				sleep, 150
+				send, {alt}{tab}
+			}
+		}
+	}
+}
+skipwinauthrunning:
+counter := 0
+
+while (counter <= 6) {
+counter++
+groupActivate, RuneliteD, r
+if (IsLogin(1)) { 
+counter2 := 0
+	;WinGetActiveTitle, Title
+	mousegetpos, xmm, ymm
+	wingetactivestats,t,t,t, x, y
+	MouseMove, x+10, y+10
+	MouseGetPos,,,RuneAcc_UID_T
+	mousemove, xmm, ymm
+	for key, val in RuneAcc_UID
+	{
+	counter2++
+		if (val == RuneAcc_UID_T) {
+			3String=%key% - %val% - %counter2%
+			3Time:=40*1 ;; 40 = 1 second
+			GuiConF(3,3,3String,-1)
+			send, {ALT Down}
+			sleep, 50
+			send, %counter2%
+			sleep, 50
+			send, {Alt Up}
+			sleep, 400
+			send, ^v
+			sleep, 150
+			send, {tab}{enter}
+			break
+		}
+	}
+} else {
+	
+}
+}
+
+
+
+
+;msgbox, % PinNum2Use
+;msgbox, % Pin2Use
+
+;;;;;;;;;;;;;;;;;;;; HERE IS WHERE YOU ARE
+return
+
+;-------------------------------------
+                        ;;782, 1741 ~~1560,2390  782+783= 661+1741=2402
+IsLogin(pins) {    ;;~776,1740    -- 0+783 clos enuf 1080+661=1741 on the nose, next        
+GLOBAL CS    ;;;;    title    783   661  0    1080
+ifExist, %A_ScriptDir%\dir.txt
+	fileDelete, %A_ScriptDir%\dir.txt
+if (pins == 0) {
+	pathString = \Logins\
+} else {
+	pathString = \Logins\PINS\
+}
+run, cmd.exe /c dir %A_ScriptDir%%pathString% >> %A_ScriptDir%\dir.txt,,min
+sleep, 150
+loop, read, %A_ScriptDir%\dir.txt
+{
+	total_lines = %A_Index%
+}
+WinGetActiveStats, titties, 22W, 22H, 2wx, 2wy
+    FUCKJFUVKDUFKC:=2wx+(22W)-100
+    FUCKINGHELLWTF:=2wy+(22H)-100
+CoordMode, Pixel, Screen
+attemptcount:=0
+imagetryagain:
+if (attemptcount>total_lines) {
+    attemptcount:=0
+    fileAppend, NOT. %attemptcount% 22W: %22W% - 22H: %22H% 2wx: %2wx% 2wy: %2wy% `nEND`n`n`n, %A_ScriptDir%%pathString%wood.log
+    return False
+}
+attemptcount++
+fileAppend, NOT. %attemptcount% 22W: %22W% - 22H: %22H% 2wx: %2wx% 2wy: %2wy% `n, %A_ScriptDir%%pathString%wood.log
+
+        ImageSearch, FoundX, FoundY, %2wx%, %2wy%, %FUCKJFUVKDUFKC%, %FUCKINGHELLWTF%, %A_ScriptDir%%pathString%%attemptcount%.png
+        DebugPriority:=6
+    if (ErrorLevel = 2) {
+            goto imagetryagain
+        } else if (ErrorLevel = 1) {
+                        goto imagetryagain
+        } else {
+       fileAppend, IS`. %attemptcount% 22W: %22W% - 22H: %22H% 2wx: %2wx% 2wy: %2wy% `nEND`n`n`n, %A_ScriptDir%%pathString%wood.log
+    return true
+    }
+    return false
+    
+}
+
+
+
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+#If KeysSet=1 and InitFinish=1
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+
+
+
+Capslock & F::
+if (!MarkersNotesMagnifiers or MarkersNotesMagnifiers="Notes") {
+MarkersNotesMagnifiers=Markers
+3String=Current Caps + LB/RB/MB/C/X selections set to MARKERS.
+3Time:=40*2 ;; 40 = 1 second
+GuiConF(3,3,3String,-1)
+} else if (MarkersNotesMagnifiers="Markers") {
+MarkersNotesMagnifiers=Magnifiers
+3String=Current Caps + LB/RB/MB/C/X selections set to MAGNIFIERS.
+3Time:=40*2 ;; 40 = 1 second
+GuiConF(3,3,3String,-1)
+} else {
+MarkersNotesMagnifiers=Notes
+3String=Current Caps + LB/RB/MB/C/X selections set to NOTES.
+3Time:=40*2 ;; 40 = 1 second
+GuiConF(3,3,3String,-1)
+}
+return
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+#if MarkersNotesMagnifiers="Notes" and KeysSet=1 and InitFinish=1
+Capslock & RButton::
+if (SelNote<300 or SelNote>=NoteCounter)
+    SelNote:=NumAccs+300
+if(SubStr(3String, 1, 12)="Current note")
+    SelNote++
+if (SelNote=NumAccs+300)
+    SelNote:=NumAccs+300+1
+NoteCounterT:=NoteCounter-NoteSafety
+SelMNote:=SelNote-(NumAccs)-300
+3String=Current note - %SelMNote%/%NoteCounterT%. 1 to move/show selected note. 2 to hide the note.
+3Time:=40*2 ;; 40 = 1 second
+GuiConF(3,3,3String,-1)
+Input, Outputvar, L1 T3
+if(Outputvar="1") {
+MouseGetPos, NoteX, NoteY
+NoteSel=Note_%SelNote%
+GuiConF("Note_" SelNote,1,NoteX,NoteY) 
+} else if (Outputvar="2") {
+SkipCounter++
+GuiConF("Note_" SelNote,2,-1,-1)
+NoteSkipArray[SkipCounter]:=SelNote
+GuiActiveArray[SelNote]:=5
+} else {
+    3String=Canceled.
+    3Time:=40*2 ;; 40 = 1 second
+    GuiConF(3,3,3String,-1)
+}
+return
+
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+#if MarkersNotesMagnifiers="Notes" and KeysSet=1 and InitFinish=1
+Capslock & LButton::
+if (!TempGUI or TempGUI!="TempGUI") {
+NoteString:=
+!NoteString
+MouseGetPos, NoteX, NoteY
+NoteSafety:=NumAccs+300
+if (NoteCounter<NoteSafety or !NoteCounter)
+    NoteCounter=%NoteSafety%
+NoteCounter++
+TempGUI:="TempGUI"
+OutlineBuilder(TempGUI)
+BuildGUI(TempGUI)
+GuiConF(TempGUI, 3, "______", -1)    
+GuiRandColor(TempGUI)
+GuiConF(TempGUI, 1,NoteX-40,NoteY-40)
+InputBox, NoteString, Note, Enter a note`, hide or move it with Capslock + RButton., , 275, 175, NoteX+50, NoteY+50
+if (!NoteString or NoteString="") {
+    3String=Note Canceled.
+    3Time:=40*2 ;; 40 = 1 second
+    GuiConF(3,3,3String,-1)
+}
+
+if !(3String="Note Caceled.") {
+    NoteCounter2=Note_%NoteCounter%
+OutlineBuilder(NoteCounter2)
+BuildGUI(NoteCounter2)
+GuiConF(NoteCounter2,3,NoteString,-1)
+GuiRandColor(NoteCounter2)
+GuiConF(NoteCounter2,1,NoteX,NoteY) 
+}
+sleep 500
+GuiConF(TempGUI, 2, -1, -1)
+TempGUI:=
+} else {
+    3String=Please finish what you are doing.
+    3Time:=40*2 ;; 40 = 1 second
+    GuiConF(3,3,3String,-1)
+}
+return
+
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+#if MarkersNotesMagnifiers="Notes" and KeysSet=1 and InitFinish=1
+Capslock & c::
+Counter:=0
+TempArray:=Array()
+guiactivekey:=
+guiactivevalue:=
+for guiactivekey, guiactivevalue in GuiActiveArray {
+if (guiactivevalue=3 or guiactivevalue=4) {
+    GuiConF(guiactivekey, 2, -1, -1)
+    GuiActiveArray[guiactivekey]:=0
+    if (guiactivevalue=3) {
+	Counter++
+	}
+    }
+}
+for guiactivekey, guiactivevalue in GuiActiveArray {
+    if (guiactivevalue!=3 and guiactivevalue!=4 and guiactivevalue!=0) {
+        TempArray[guiactivekey]:=guiactivevalue
+    }
+}
+GuiActiveArray:=TempArray
+TempArray:=
+Counter:=floor(Counter)
+    3String=%Counter% Notes Destroyed.
+    3Time:=40*2 ;; 40 = 1 second
+    GuiConF(3,3,3String,-1)
+    Counter:=
+    NoteCounter:=
+return
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+#if MarkersNotesMagnifiers="Markers" and KeysSet=1 and InitFinish=1
+Capslock & LButton::
+offset:=0
+offset2:=0
+goto markerPlaceOffsetSkip
+markerPlace:
+if ((offset1 = "" or offset1 = 0 or offset1 = -20) and (offset2 = "" or offset2 = -20 or offset2=0)) {
+	offset1:=20
+	offset2:=-20
+} else if (offset2 = -20) {
+	offset1:=-20
+	offset2:=20
+}
+markerPlaceOffsetSkip:
+MouseGetPos, MarkX, MarkY
+MarkerSafety:=NumAccs+300
+if (MarkerCounter<MarkerSafety or !MarkerCounter)
+    MarkerCounter=%MarkerSafety%
+MarkerCounter++
+MarkerCounter2=_%MarkerCounter%
+MarkerCounter4=%asciichar%%MarkerCounter%
+MarkerCounter3:=MarkerCounter-MarkerSafety
+OutlineBuilder(MarkerCounter4)
+BuildGUI(MarkerCounter2)
+OutlineBuilder(MarkerCounter2)
+GuiConF(MarkerCounter2, 3, asciichar, -1)    
+GuiConF(MarkerCounter4, 1,MarkX-80-offset2,MarkY-86-offset1)
+GuiRandColor(MarkerCounter2)
+GuiConF(MarkerCounter2,1,MarkX-80-offset2,MarkY-85-offset1)
+return
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+#if MarkersNotesMagnifiers="Markers" and KeysSet=1 and InitFinish=1
+Capslock & c::
+markerClear:
+Counter:=0
+TempArray:=Array()
+for guiactivekey, guiactivevalue in GuiActiveArray {
+if (guiactivevalue=2) {
+    GuiConF(guiactivekey, 2, -1, -1)
+    GuiActiveArray[guiactivekey]:=0
+    Counter++
+    }
+}
+for guiactivekey, guiactivevalue in GuiActiveArray {
+if (guiactivevalue!=2 and guiactivevalue!=0 and guiactivevalue!=4) {
+        TempArray[guiactivekey]:=guiactivevalue
+    } 
+}
+GuiActiveArray:=TempArray
+TempArray:=
+Counter:=floor(Counter/2)
+    3String=%Counter% Markers Destroyed.
+    3Time:=40*2 ;; 40 = 1 second
+    GuiConF(3,3,3String,-1)
+    Counter:=
+    MarkerCounter:=
+    MarkerCounter3:=
+    MarkerCounter4:=
+    MarkerSafety:=
+    DotCounter:=0
+return
+#if MarkersNotesMagnifiers="Markers" and KeysSet=1 and InitFinish=1
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+Capslock & RButton::
+DotCounter:=0
+    3String=Counter Set to 1
+    3Time:=40*2 ;; 40 = 1 second
+    GuiConF(3,3,3String,-1)
+return
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+#if MarkersNotesMagnifiers="Magnifiers" and KeysSet=1 and InitFinish=1
+Capslock & LButton::
+if(!counterPMM or counterPMM<0 or counterPMM>=2)
+counterPMM=0
+    counterPMM++
+if(!counterMM or counterMM<=0)
+    counterMM:=0
+MouseGetPos x, y
+if (counterPMM=1) {
+    Rx1 := x+15
+    Ry1 := y-5
+    OutlineBuilder("X1")
+    GuiConF("X1", 1,x-84,y-86)
+        3String=Top Left corner set.
+        3Time:=40*2 ;; 40 = 1 second
+        GuiConF(3,3,3String,-1)
+} else if (counterPMM=2) {
+    Rx2 := x-15
+    Ry2 := y+5
+        3String=Bottom Right corner set.
+        3Time:=40*2 ;; 40 = 1 second
+        GuiConF(3,3,3String,-1)
+    GuiConF("X1Outline1", 2, -1, -1)
+    counterMM++
+    zoom := 3              
+    ResX[counterMM] := Rx2-Rx1
+    Rx := ResX[counterMM]
+    ResY[counterMM] := Ry2-Ry1
+    Ry := ResY[counterMM]
+    Gui Magnifier%counterMM%: Default
+    Gui Magnifier%counterMM%: new, +AlwaysOnTop -0xC00000
+    Gui Show, % "w" ((2*Rx)-10) " h" ((2*Ry)-30) " x" x " y" y "", Magnifier%counterMM%
+    WinGet MagnifierID, id,  Magnifier%counterMM%
+    WinGet PrintSourceID, ID
+    hdd_frame[counterMM] := DllCall("GetDC", UInt, PrintSourceID)
+    hdc_frame[counterMM] := DllCall("GetDC", UInt, MagnifierID)
+    ;WinSet, Style, ^0xC00000
+    Zx[counterMM] := ResX[counterMM]/zoom           ; frame x/y size
+    Zy[counterMM] := ResY[counterMM]/zoom
+    x2[counterMM] := Rx2-Zx[counterMM]-(rx/zoom)
+    y2[counterMM] := Ry2-Zy[counterMM]
+    SetTimer Repaint, 50
+    setTimer, Repaint, on
+}
+return
+
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+#if MarkersNotesMagnifiers="Magnifiers" and KeysSet=1
+Capslock & c::
+counterM:=0
+counterM2:=0
+counterMM:=0
+for key, value in hdd_frame{
+DllCall("gdi32.dll\DeleteDC"    , UInt,value )
+hdd_frame[key]:="removeme"
+}
+for key, value in hdc_frame{
+DllCall("gdi32.dll\DeleteDC"    , UInt,value )
+winclose Magnifier%key%
+keyCount++
+hdc_frame[key]:="removeme"
+}
+    3String=Removed %keyCount% Magnifiers.
+    3Time:=40*2 ;; 40 = 1 second
+    GuiConF(3,3,3String,-1)
+while (keyCount>0) {
+if (hdd_frame[keyCount]="removeme") {
+    hdd_frame.RemoveAt(keyCount)
+}
+if (hdc_frame[keyCount]="removeme") {
+    hdc_frame.RemoveAt(keyCount)
+}
+keyCount--
+}
+    MouseFollowMagID:=0
+    MouseFollowMag:=0
+return
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+#if MarkersNotesMagnifiers="Magnifiers" and KeysSet=1 and InitFinish=1
+Capslock & RButton::
+if(!counterM or counterM<0 or counterM>=counterMM)
+    counterM:=0
+destroyed_tryagain:
+if(SubStr(3String, 1, 9)="Magnifier")
+    counterM++
+if (counterM=0)
+    counterM:=1
+    3String=Magnifier%counterM%, 1 location, 2 window, 3 mouse/tick counter, 4 destroy
+    3Time:=40*10 ;; 40 = 1 second
+    GuiConF(3,3,3String,-1)
+    if (hdd_frame[counterM]="destroyed")
+        goto destroyed_tryagain
+Input, Outputvar, L1 T10
+if(Outputvar="1") {
+MouseGetPos x2x, y2y
+zoom := 3
+Zx[counterM] := ResX[counterM]/zoom  ; zoom           ; frame x/y size
+Zy[counterM] := ResY[counterM]/zoom
+x2[counterM] := x2x-Zx[counterM]+(ResX[counterM]/zoom)/2
+y2[counterM] := y2y-Zy[counterM]+(ResY[counterM]/zoom)
+    3String=Magnified Location of Magnifier%counterM% set
+    3Time:=40*3 ;; 40 = 1 second
+    GuiConF(3,3,3String,-1)
+    return
+} else if (Outputvar="2") {
+MouseGetPos x2x, y2y
+WinActivate, Magnifier%counterM%
+WinMove A, , % x2x, % y2y
+winset, AlwaysOntop, On, A
+    3String=Magnifier%counterM% window position set.
+    3Time:=40*3 ;; 40 = 1 second
+    GuiConF(3,3,3String,-1)
+    return
+} else if (Outputvar="4") {
+DllCall("gdi32.dll\DeleteDC"    , UInt,hdd_frame[counterM] )
+DllCall("gdi32.dll\DeleteDC"    , UInt,hdc_frame[counterM] )
+    3String=Magnifier%counterM% destroyed.
+    3Time:=40*3 ;; 40 = 1 second
+    GuiConF(3,3,3String,-1)
+    winclose Magnifier%counterM%
+    hdd_frame[counterM]:="destroyed"
+    if (MouseFollowMagID=counterM) { 
+        MouseFollowMagID:=0
+        MouseFollowMag:=0
+    }
+        return
+} else if (Outputvar="3") {
+        MouseFollowMag++
+        if (MouseFollowMag=1) {
+            3String=Magnifier%counterM% is following mouse.
+        } else if (MouseFollowMag=2 and tickHUD=1) {
+            3String=Magnifier%counterM% is following tick counter.
+        } else {
+            3String=Disabled following of cursor/tickcounter
+            MouseFollowMag:=0
+        }
+        3Time:=40*10 ;; 40 = 1 second
+        GuiConF(3,3,3String,-1)
+        MouseFollowMagID:=CounterM
+        return
+} else {
+    3String=Canceled.
+    3Time:=40*2 ;; 40 = 1 second
+    GuiConF(3,3,3String,-1)
+}
+return
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+#If KeysSet=1 and InitFinish=1
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+Capslock & x::
+TickTockTickTock:=0
+tickLimit=NaN
+initTick:=-1
+if (tickHUD=1) {
+        3String=Tick Counter Active. 1. to disable`, 2. to change tick count`, 3. to change style
+        3Time:=40*2 ;; 40 = 1 second
+        GuiConF(3,3,3String,-1)
+    Input, Outputvar, L1 T5
+    if(Outputvar="1") {
+    tickHUD:=0
+        3String=Tick Counter turned off
+        3Time:=40*2 ;; 40 = 1 second
+        GuiConF(3,3,3String,-1)
+    } else if(Outputvar="2") {
+    MouseGetPos, MgetX, MgetY
+                    MgetX4:=MgetX+10
+                    MgetY4:=MgetY+10                
+    InputBox, tickLimit, Tick Count Limit, Enter the number of ticks to count up to`, this repeats until canceled. If you enter 0 or 1`, it will just count forever., , 275, 175, MgetX4, MgetY4
+    ifExist, %A_ScriptDir%\SerbzOSD\tickLimit.log
+        fileDelete, %A_ScriptDir%\SerbzOSD\tickLimit.log
+    fileAppend, %tickLimit%, %A_ScriptDir%\SerbzOSD\tickLimit.log
+    } else if(Outputvar="3") {
+        if (tickDisplaySetting=1 or tickDisplaySetting>3 or tickDisplaySetting<1) {
+            tickDisplaySetting:=2
+			tickMonArray:=monitorFunc()
+			CurDisplayW:=tickMonArray[6]
+			CurDisplayH:=tickMonArray[5]
+			CurDisplayY:=tickMonArray[1]
+			CurDisplayX:=tickMonArray[2]
+        } else if (tickDisplaySetting=2) {
+            tickDisplaySetting:=3
+        } else if (tickDisplaySetting=3) {
+            tickDisplaySetting:=1
+			}
+        ifExist, %A_ScriptDir%\SerbzOSD\tickDisplaySetting.log
+            fileDelete, %A_ScriptDir%\SerbzOSD\tickDisplaySetting.log
+        fileAppend, %tickDisplaySetting%, %A_ScriptDir%\SerbzOSD\tickDisplaySetting.log
+    }
+} else {
+	tickHUD:=1
+	boredCounter:=1
+	setTimer, tickHUD, 600
+	setTimer, tickHUD, on
+    3String=Creating tick counter.
+    3Time:=40*2 ;; 40 = 1 second
+    GuiConF(3,3,3String,-1)
+    temp:=
+    boredCounter:=Rand(1,2)
+    if (boredCounter=2)
+        boredCounter=-1
+    boredCounter2:=Rand(1,2)
+    if (boredCounter2=2)
+        boredCounter2=-1
+    boredDirection:=Rand(1,2)
+    if (boredDirection=2)
+        boredDirection=-1
+    boredDirection2:=Rand(1,2)
+    if (boredDirection2=2)
+        boredDirection2=-1
+    angle := Rand(0,360)
+
+    if (tickDisplaySetting=5 or tickDisplaySetting=2) {
+		tickMonArray:=monitorFunc()
+		CurDisplayW:=tickMonArray[6]
+		CurDisplayH:=tickMonArray[5]
+		CurDisplayY:=tickMonArray[1]
+		CurDisplayX:=tickMonArray[2]
+    }
+    tickTryAgain:
+    ifNotExist, %A_ScriptDir%\SerbzOSD\tickLimit.log
+    {
+    MouseGetPos, MgetX, MgetY
+                    MgetX4:=MgetX+10
+                    MgetY4:=MgetY+10                
+    InputBox, tickLimit, Tick Count Limit, RESET THIS NUMBER WITH CAPSLOCK + N. -- Enter the number of ticks to count up to`, this repeats until canceled. If you enter 0 or 1`, it will just count forever.. LEFT ALT + B changes the display mode, , 380, 175, MgetX4-190, MgetY4-100
+    if (tickLimit and (tickLimit<=0 or tickLimit>=0)){
+        fileAppend, %tickLimit%, %A_ScriptDir%\SerbzOSD\tickLimit.log
+    } else {
+        3String=Please enter something into the input box. Anything... Literally anything.
+        3Time:=40*5 ;; 40 = 1 second
+        GuiConF(3,3,3String,-1)
+        goto tickTryAgain
+    }    
+    } else {
+        fileRead, tickLimit, %A_ScriptDir%\SerbzOSD\tickLimit.log
+    }
+
+}
+ifExist, %A_ScriptDir%\SerbzOSD\tickLimit.log
+     fileRead, tickLimit, %A_ScriptDir%\SerbzOSD\tickLimit.log
+return
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+Capslock & Z::
+    3String=Z again to stick/unstick these messages, 1 to hide/show these messages, 2 to hide/show nameplates
+    3Time:=40*5 ;; 40 = 1 second
+    GuiConF(3,3,3String,-1)
+    Input, Outputvar, L1 T5
+    if(Outputvar="2") {
+        if (GUI_Names=0) {
+        WinGetActiveTitle, aTitleZ
+                3String=OSD Name plates are now being shown
+                3Time:=40*2 ;; 40 = 1 second
+                GuiConF(3,3,3String,-1)
+            GUI_Names=1
+            FileDelete, %A_ScriptDir%\SerbzOSD\GUI_Names.log
+            FileAppend, %GUI_Names%, %A_ScriptDir%\SerbzOSD\GUI_Names.log
+            GuiNumber:=1
+            O_Title:=NaN
+            GoSub, UpdateOSD
+            WinActivate, %aTitleZ%
+            return
+        } else {
+                3String=OSD Name plates are now being hidden
+                3Time:=40*2 ;; 40 = 1 second
+                GuiConF(3,3,3String,-1)
+                GUI_Names=0
+            FileDelete, %A_ScriptDir%\SerbzOSD\GUI_Names.log
+            FileAppend, %GUI_Names%, %A_ScriptDir%\SerbzOSD\GUI_Names.log
+            GuiConF(1,2,-1,-1)
+        }    
+    } else if (Outputvar="1") {
+        if (MouseMessages=0) {
+            MouseMessages:=1
+                3String=These messsages are now being shown
+                3Time:=40*2 ;; 40 = 1 second
+                GuiConF(3,3,3String,-1)
+            FileDelete, %A_ScriptDir%\SerbzOSD\MouseMessages.log
+            FileAppend, %MouseMessages%, %A_ScriptDir%\SerbzOSD\MouseMessages.log
+        } else {
+        3String=These messsages are now being hidden
+                3Time:=40*1 ;; 40 = 1 second
+                GuiConF(3,3,3String,-1)
+                sleep 2000
+            MouseMessages=0
+            FileDelete, %A_ScriptDir%\SerbzOSD\MouseMessages.log
+            FileAppend, %MouseMessages%, %A_ScriptDir%\SerbzOSD\MouseMessages.log
+        }    
+    } else if (Outputvar="Z") {
+if(!stopThreeGo or stopThreeGo=0) {
+    3String=Cursor objects stuck to location.
+    3Time:=40*2 ;; 40 = 1 second
+    GuiConF(3,3,3String,-1)
+	stopThreeGo:=1
+} else {
+    3String=Cursor objects stuck to cursor.
+    3Time:=40*2 ;; 40 = 1 second
+    GuiConF(3,3,3String,-1)
+	stopThreeGo:=0
+}
+}    else {
+        3String=Canceled.
+        3Time:=40*2 ;; 40 = 1 second
+        GuiConF(3,3,3String,-1)
+    }
+return
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+    Capslock & w::
+    Keywait, w
+    if (WaitJustOneFuckingSecond>=0) {
+        3String=Please Wait
+        3Time:=40*1 ;; 40 = 1 second
+        GuiConF(3,3,3String,-1)
+        return
+    } else {
+        WaitJustOneFuckingSecond=2
+        SetTimer, 1fuckingsecondtimer, on
+        if (TimerIsPaused=0) {
+            fileDelete, %A_ScriptDir%\SerbzOSD\GlobalTimerMinR.log
+            fileDelete, %A_ScriptDir%\SerbzOSD\GlobalSecondDisplay.log
+            fileDelete, %A_ScriptDir%\SerbzOSD\TimerIsPaused.log
+            TimerIsPaused:=1
+            TimerIsRunning:=0
+            fileAppend, %TimerIsPaused%, %A_ScriptDir%\SerbzOSD\TimerIsPaused.log
+            fileAppend, %GlobalTimerMinR%, %A_ScriptDir%\SerbzOSD\GlobalTimerMinR.log
+            fileAppend, %GlobalSecondDisplay%, %A_ScriptDir%\SerbzOSD\GlobalSecondDisplay.log
+            3String=Timer Paused and Saved
+            3Time:=40*1 ;; 40 = 1 second
+            GuiConF(3,3,3String,-1)
+            return
+        } else if (TimerIsPaused=1) {
+            ifExist %A_ScriptDir%\SerbzOSD\GlobalTimerMinutes.log
+            {
+                fileRead, GlobalTimerMinutes, %A_ScriptDir%\SerbzOSD\GlobalTimerMinutes.log
+            } else {
+             goto Timer_Load_Error
+            }
+            ifExist %A_ScriptDir%\SerbzOSD\GlobalTimerMinR.log
+            {
+                fileRead, GlobalTimerMinR, %A_ScriptDir%\SerbzOSD\GlobalTimerMinR.log
+            } else {
+             goto Timer_Load_Error
+            }    
+            ifExist %A_ScriptDir%\SerbzOSD\GlobalSecondDisplay.log
+            {
+                fileRead, GlobalSecondDisplay, %A_ScriptDir%\SerbzOSD\GlobalSecondDisplay.log
+            } else {
+             goto Timer_Load_Error
+            }    
+            fileDelete, %A_ScriptDir%\SerbzOSD\TimerIsPaused.log
+            fileDelete, %A_ScriptDir%\SerbzOSD\GlobalTimerMinR.log
+            fileDelete, %A_ScriptDir%\SerbzOSD\GlobalSecondDisplay.log
+            TimerIsRunning:=1
+            TimerIsPaused:=0
+            SetTimer, UpdateOSD2, on
+
+            3String=Timer Resumed
+            3Time:=40*1 ;; 40 = 1 second
+            GuiConF(3,3,3String,-1)
+            return
+    }
+}
+return
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+
+caps_f:
+Outputvar:=2
+goto skipinput_timers
+capslock & e::
+    3String=Press 1 to set global timer time, 2 to set account specific timer time
+    3Time:=40*5 ;; 40 = 1 second
+    GuiConF(3,3,3String,-1)
+    Input, Outputvar, L1 T5
+    skipinput_timers:
+    if(Outputvar="1") {
+if (WaitJustOneFuckingSecond>=0) {
+    3String=Please Wait
+    3Time:=40*1 ;; 40 = 1 second
+    GuiConF(3,3,3String,-1)
+    return
+} else {
+
+    WaitJustOneFuckingSecond=1
+    SetTimer, 1fuckingsecondtimer, on    
+    if(TimerIsPaused=0 and TimerIsRunning=0) {
+        goto SetTimer_Minutes
+    } else {
+        3String=Please clear current timer first.
+        3Time:=40*2 ;; 40 = 1 second
+        GuiConF(3,3,3String,-1)
+    }
+}
+} else if (Outputvar="2") {
+;;TheBootesVoidIsAnInterestingObjectFoundInSpaceWellTheLackOfAnObjectReallyItsPitchBlackDark
+;;TheresLotsOfWaysToExplainItButMyFavoriteIsThatASuperAdvancedAlienRaceOrAIisBuildingDysonSpheres
+WinGetActiveTitle, aTitleT
+MouseGetPos, ATMouseX, 
+                FUCKX:=ATMouseX-105
+                FUCKY:=ATMouseY-20
+                InputBox, AccTimerTime, Timer Time, Enter the number of minutes, , 210, 130, FUCKX, FUCKY
+                IfExist, %A_ScriptDir%\SerbzOSD\AccTimerTime.log
+                    FileDelete, %A_ScriptDir%\SerbzOSD\AccTimerTime.log
+                FileAppend, %AccTimerTime%, %A_ScriptDir%\SerbzOSD\AccTimerTime.log
+
+                If (!AccTimerTime or AccTimerTime<=0)
+                    {
+                        CapsTAccTimersCounter:=0
+                        3String=No Time was entered
+                        3Time:=40*1 ;; 40 = 1 second
+                        GuiConF(3,3,3String,-1)
+                        return
+                    } else {
+                        if (CapsTAccTimersCounter!=0) {
+                            CapsTAccTimersCounter:=0
+                            WinActivate, %aTitleT%
+                            goto caps_ast
+                        }
+                        CapsTAccTimersCounter:=0
+                    }        
+} else {
+    3String=Canceled.
+    3Time:=40*2 ;; 40 = 1 second
+    GuiConF(3,3,3String,-1)
+}
+return
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+Capslock & t::
+caps_ast:
+ifExist, %A_ScriptDir%\SerbzOSD\AccTimerTime.log
+    FileRead, AccTimerTime, %A_ScriptDir%\SerbzOSD\AccTimerTime.log
+if(CapsTAccTimersCounter!=0)
+    return
+while (CapsTAccTimersCounter<=NumAccs) {
+WinGetActiveTitle, aTitleT
+    CapsTAccTimersCounter++
+    AccTimerAcc = % Account[CapsTAccTimersCounter]
+;        msgbox, % AccTimerAcc
+;		msgbox, % aTitleT
+        If (aTitleT="RuneLite - "AccTimerAcc) {
+			
+            if (!AccTimerTSec[CapsTAccTimersCounter]) {
+                If (!AccTimerTime)
+                    {
+                        goto caps_f
+                    }
+				AccTimerTimeFloor:=floor(AccTimerTime)
+				AccTimerTimeDiff:=AccTimerTime-AccTimerTimeFloor
+                GuiNumber:=CapsTAccTimersCounter+NumAccs
+                OutlineCounter:=0
+                OutlineID=%GuiNumber%Outline
+                OOutlineID:=OutlineID
+                OutlineBuilder(GuiNumber)
+                BuildGUI(GuiNumber)
+                GuiNumber:=CapsTAccTimersCounter+NumAccs
+                3String=Starting Timer for %AccTimerAcc%
+                3Time:=40*1 ;; 40 = 1 second
+                GuiConF(3,3,3String,-1)
+                ASTWindow[CapsTAccTimersCounter]:=aTitleT
+                AccountTimerTotalMinutes[CapsTAccTimersCounter]:=round(AccTimerTimeFloor, 0)
+				;round(AccTimerTimeFloor, 0)
+                AccTimerTSec[CapsTAccTimersCounter]:=round((AccTimerTime*60), 0)
+				;;;;
+;				tempvar:=AccTimerTSec[CapsTAccTimersCounter]
+;				tempvar2:=(AccTimerTimeDiff*60)
+;				3String = Diff: %AccTimerTimeDiff% - AccTimerTSec: %tempvar% - AccTimerTimeDiff*60: %tempvar2%
+;				3Time:=40*2 ;; 40 = 1 second
+;				GuiConF(3,3,3String,-1)
+;				sleep, 4000
+				;;;;
+				
+                AccTimerCDSec[CapsTAccTimersCounter]:=round(AccTimerTimeDiff*60, 0)
+                CapsTAccTimersCounter:=0
+                SetTimer, AccTimers, on
+                break
+                return
+            } else {
+                GuiNumber:=CapsTAccTimersCounter+NumAccs
+                OutlineID=%GuiNumber%Outline
+                GuiConF(GuiNumber,2,-1,-1)
+                AccTimerTSec.RemoveAt(CapsTAccTimersCounter)
+                AccTimerTSecMin.RemoveAt(CapsTAccTimersCounter)
+                AccTimerFTMin.RemoveAt(CapsTAccTimersCounter)
+                AccTimerCDSec.RemoveAt(CapsTAccTimersCounter)
+
+                3String=Timer Cleared for %AccTimerAcc%
+                3Time:=40*1 ;; 40 = 1 second
+                GuiConF(3,3,3String,-1)
+                CapsTAccTimersCounter:=0
+                break
+                return
+            }
+        } else if (CapsTAccTimersCounter=>NumAccs) {
+            3String=Please focus a runelite window that has a configured account name in the title.
+            3Time:=40*1 ;; 40 = 1 second
+            GuiConF(3,3,3String,-1)
+            CapsTAccTimersCounter:=0
+            break
+            return
+        }        
+    }
+return
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+Capslock & q::
+Keywait, q
+timer_t:
+if (WaitJustOneFuckingSecond>0 and TimerIsRunning=0) {
+    3String=Please Wait
+    3Time:=40*1 ;; 40 = 1 second
+    GuiConF(3,3,3String,-1)
+    return
+} else {
+    WaitJustOneFuckingSecond:=2
+    SetTimer, 1fuckingsecondtimer, on
+    ifExist %A_ScriptDir%\SerbzOSD\GlobalTimerMinutes.log
+    {
+        FileRead, GlobalTimerMinutes, %A_ScriptDir%\SerbzOSD\GlobalTimerMinutes.log
+    } else {
+        goto SetTimer_Minutes
+    }
+    if (!GlobalTimerMinutes)
+        goto SetTimer_Minutes
+if (TimerIsRunning=0 and TimerIsPaused=0) {
+	GTMDiff:=GlobalTimerMinutes-floor(GlobalTimerMinutes)
+    GlobalTotalSeconds:=GlobalTimerMinutes*60
+    GlobalSecondsDisplayInit:=GlobalTotalSeconds-1
+    GlobalSecondDisplay:=60
+    TimerIsRunning:=1
+    TimerIsPaused:=0
+    TimerResetWarning:=0
+
+
+    PlaySound=0
+    3String=A New timer has started
+    3Time:=40*1 ;; 40 = 1 second
+    GuiConF(3,3,3String,-1)
+	GoSub, UpdateOSD2
+	sleep, 1000
+    SetTimer, UpdateOSD2, on
+    return    
+    } else if(TimerTimeStr="TIME"){
+            goto timerclear
+    } else if(TimerIsPaused=1 and TimerResetWarning=0) {
+        3String=Timer Paused - Caps+W to Resume - Caps+Q again to Reset
+        3Time:=40*6
+        GuiConF(3,3,3String,-1)
+        TimerResetWarning++
+        return     
+    } else if ((TimerIsRunning=1 or TimerIsPaused=1) and TimerResetWarning=0) {
+        3String=Timer currently running - Press Caps+Q again to reset.
+        3Time:=40*1
+        GuiConF(3,3,3String,-1)
+        TimerResetWarning++
+        return
+    } else if (TimerResetWarning=1 and (TimerIsRunning=1 or TimerIsPaused>=1)) {
+        goto timerclear
+    }     
+}
+return
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+Capslock & 3::
+    3String=3 to count up, 2 to clear.
+    3Time:=40*1 ; 40 is one second
+    GuiConF(3,3,3String,-1)
+        Input, Outputvar, L1 V T1
+        if(Outputvar="3") {
+thecounterupdo:
+CounterVar=0
+last_type:=%count_type%
+WinGetActiveTitle, Title
+if (!CounterFuncArray[count_type]) {
+    CounterFuncArray[count_type]:=0
+}
+
+    CounterFuncArray[count_type]++
+    counterkey=% CounterFuncArray[count_type]
+
+} else if(Outputvar="2") {
+        3String=Counter Cleared
+    3Time:=40*1 ; 40 is one second
+    GuiConF(3,3,3String,-1)
+        thecounterresetdo:
+        CounterVar=0
+        holdvar:=1
+        if (CounterFuncArray[count_type]) {
+            CounterFuncArray[count_type]:=0
+        }
+        counterkey=% CounterFuncArray[count_type]
+    }
+return
+
+
+Capslock & Right::
+OSD_MOVE:=OSD_MOVE+25
+goto osdmovekeysavewait
+Capslock & Left::
+OSD_MOVE:=OSD_MOVE-25
+goto osdmovekeysavewait
+Capslock & Up::
+OSD_MOVE2:=OSD_MOVE2-7
+goto osdmovekeysavewait
+Capslock & Down::
+OSD_MOVE2:=OSD_MOVE2+7
+goto osdmovekeysavewait
+;----------
+osdmovekeysavewait:
+if (SaveWaitCounter<=0) {
+    SaveWaitCounter=2
+    SetTimer, SaveWait, on
+}
+return
+
+
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+#If KeysSet=2 and InitFinish=1
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+Capslock & u::  ;;;;;;    <--- This is to toggle on/off the automatic window focus of runelite under the cursor
+Keywait, u
+    FileDelete, %A_ScriptDir%\SerbzOSD\ActiveToggle.log
+    FileAppend, %ActiveToggle%, %A_ScriptDir%\SerbzOSD\ActiveToggle.log
+            3String=No longer activating windows under cursor
+        3Time:=40*2 ;; 40 = 1 second
+        GuiConF(3,3,3String,-1)
+if (ActiveToggle=1) {
+ActiveToggle:=0
+SetTimer, ActivateWinUM, off
+} else {
+            3String=Activating windows under cursor
+        3Time:=40*2 ;; 40 = 1 second
+        GuiConF(3,3,3String,-1)
+ActiveToggle:=1
+SetTimer, ActivateWinUM, on
+}
+return
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+;-------------------;-------------------;-------------------;
+;        The keybind below make it so a window, any window    ;
+;        cannot be interacted with, if keybind is pressed    ;
+;        The window under the cursor window becomes disabled    ;
+;        press it again, and it re-enables it.                ;
+;-------------------;-------------------;-------------------;
+Capslock & 3::
+    MouseGetPos,,,guidUnderCursor
+    WinGetTitle, TitleUnderCursor, ahk_id %guidUnderCursor%
+for WinDisableKey, WinDisableVal in WinDisable {
+    if (WinDisableVal=guidUnderCursor) {
+        Winset, enable, , ahk_id %guidUnderCursor%
+        WinActivate, %guidUnderCursor%
+        3String=%TitleUnderCursor% ENABLED interaction.
+        3Time:=40*4 ; 40 is one second
+        GuiConF(3,3,3String,-1)
+        WinDisable[WinDisableKey]:="REMOVEME"
+        return
+    }    
+}
+if (!WinDisableCounter or WinDisableCounter<0)
+    WinDisableCounter:=0
+WinDisableCounter++
+WinDisable[WinDisableCounter]:=guidUnderCursor
+Winset, disable, , ahk_id %guidUnderCursor%
+WinActivate, ahk_class Shell_TrayWnd
+WinSet, AlwaysOnTop, on, ahk_class Shell_TrayWnd
+3String=%TitleUnderCursor% DISABLED interaction.
+3Time:=40*4 ; 40 is one second
+GuiConF(3,3,3String,-1)
+return
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+;tab & q::
+Capslock & q:: ;;window ontop or not
+keywait, q
+WinGetTitle, A_Title, A
+    if (OnTopArray[A_Title]=1) {
+    WinSet, AlwaysOnTop, Off, A
+
+    3String=Always Ontop - OFF - for %A_Title%
+    3Time:=40*1 ; 40 is one second
+    GuiConF(3,3,3String,-1)
+        OnTopArray[A_Title]:=0
+    } else { 
+        WinSet, AlwaysOnTop, on, A
+    OnTopArray[A_Title]:=1
+    3String=Always Ontop - ON - for %A_Title%
+    3Time:=40*1 ; 40 is one second
+    GuiConF(3,3,3String,-1)
+for GuiKeyCheck, GuiValueCheck in GuiActiveArray {
+    if instr(GuiKeyCheck,"Outline") { 
+        Gui, %GuiKeyCheck%: +AlwaysOntop
+    }
+}
+for GuiKeyCheck, GuiValueCheck in GuiActiveArray {    
+    if !instr(GuiKeyCheck,"Outline") { 
+        Gui, %GuiKeyCheck%: +AlwaysOntop
+    }
+}
+}
+return
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+Capslock & R:: ;;save or move to saved positions
+WinGet, RuneliteWindowCount, Count, ahk_group Runelite
+GroupAdd, RuneliteD, RuneLite - 
+WinGet, RuneliteDWindowCount, Count, ahk_group RuneliteD
+WindowPosSetCounter:=0
+moveWins:=0
+MsgboxMove_String=Move or Save
+ChangeBtnNames:=1
+Btn1_Name=Move ; YES
+Btn2_Name=Save ; ELSE
+SetTimer, MsgboxMove, on
+MsgBox, 4, %MsgboxMove_String%, Would you like to Move to your saved window positions, or save the current window positions?
+ifMsgBox, YES
+{
+moveWins:=1
+} 
+while (WindowPosSetCounter<=RuneliteDWindowCount) {
+	WindowPosSetCounter++
+	GroupActivate, RuneliteD, r
+	WinGetActiveStats, yTitle, ywWidth, ywHeight, yWX, yWY
+	;msgbox, % yTitle
+	If (moveWins=1) {
+		ifExist, %A_ScriptDir%\SerbzOSD\_%yTitle%_Settings.log
+		{
+				;SaveyTitle=%yTitle%
+			fileRead, settingsString2, %A_ScriptDir%\SerbzOSD\_%yTitle%_Settings.log
+			settingsObject2 := StrSplit(settingsString2, "|")
+			WinMove A, , % settingsObject2[1], % settingsObject2[2], % settingsObject2[3], % settingsObject2[4]
+		}
+	} else { 
+			ifExist, %A_ScriptDir%\SerbzOSD\_%yTitle%_Settings.log
+		{
+			fileRead, settingsString, %A_ScriptDir%\SerbzOSD\_%yTitle%_Settings.log
+			settingsObject := StrSplit(settingsString, "|")
+			if (( yWX!=settingsObject[1] or yWY!=settingsObject[2] or ywWidth!=settingsObject[3] or ywHeight!=settingsObject[4] )) {
+				SaveString=%yWX%|%yWY%|%ywWidth%|%ywHeight%
+				;SaveyTitle=%yTitle%
+				fileDelete, %A_ScriptDir%\SerbzOSD\_%yTitle%_Settings.log
+				fileAppend, %SaveString%, %A_ScriptDir%\SerbzOSD\_%yTitle%_Settings.log
+			}
+		} else {
+		if (yTitle!="Runelite") {
+			fileAppend, %SaveString%, %A_ScriptDir%\SerbzOSD\_%yTitle%_Settings.log
+		}
+		
+		}
+	}
+}
+return
+
+
+
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+Capslock & W::
+WinGetActiveTitle, aTitle5
+WinGet, curtrans, Transparent, A
+if (!curtrans)
+    curtrans = 255
+newtrans := curtrans - 20
+if (newtrans>0) {
+    WinSet, Transparent, %newtrans%, A
+    3String=Window %aTitle5% Opacity Decreased %newtrans%.
+    3Time:=40*1 ; 40 is one second
+    GuiConF(3,3,3String,-1)
+} else {
+    3String=Window %aTitle5% Opacity Reset.
+    3Time:=40*1 ; 40 is one second
+    GuiConF(3,3,3String,-1)
+    WinSet, Transparent, 255, A
+    WinSet, Transparent, OFF, A
+}
+return
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+Capslock & E::
+WinGetActiveTitle, aTitle5
+WinGet, curtrans, Transparent, A
+if (!curtrans)
+    curtrans = 255
+newtrans := curtrans + 16
+if (newtrans>0) {
+    WinSet, Transparent, %newtrans%, A
+    3String=Window %aTitle5% Opacity Increased %newtrans%.
+    3Time:=40*1 ; 40 is one second
+    GuiConF(3,3,3String,-1)
+} else {
+    3String=Window %aTitle5% Opacity Reset.
+    3Time:=40*1 ; 40 is one second
+    GuiConF(3,3,3String,-1)
+    WinSet, Transparent, 255, A
+    WinSet, Transparent, OFF, A
+}
+return
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+Capslock & C::
+MouseGetPos,,, WinUMID2
+WinSet, Style, ^0xC00000, ahk_id %WinUMID2%
+return
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+#If (KeysSet=1 or KeysSet=2 or !KeySet) and InitFinish=1
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+Capslock & l::
+;;Capslock & G::
+    3String=Launching Runelite...
+    3Time:=40*2 ;; 40 = 1 second
+    GuiConF(3,3,3String,-1)
+Keywait, G
+if (NoRLDir!=1) {
+    Run %RuneLiteDir%
+}
+return
+
+Capslock & N::
+    3String=preparing to shutdown down all runelites...
+    3Time:=40*7 ;; 40 = 1 second
+    GuiConF(3,3,3String,-1)
+soundplay, %A_ScriptDir%\CustomSound\godno.wav, wait
+sleep 7
+    3String=Shutting down all runelites!
+    3Time:=40*2 ;; 40 = 1 second
+    GuiConF(3,3,3String,-1)
+Run cmd.exe /c taskkill /f /im "runelite.exe"
+return
+
+Capslock & enter::
+Send, {enter} 
+$Capslock::
+do_capslock:
+if (ActiveToggle=1)
+	settimer, ActivateWinUM, off
+WinGetActiveTitle, capsTitle
+capsTitle:= % SubStr(capsTitle, 12)
+valuesinaccount:=0
+CurrentAccKey:=-1
+for precapskey in Account {
+    valuesinaccount++
+    if (Account[precapskey]=capsTitle)
+        CurrentAccKey:=valuesinaccount
+}
+ifWinNotExist, % LastFocused 
+{
+checklastfocused:=0
+GroupActivate, RuneliteD, r
+;return
+}
+if (CurrentAccKey=-1) {
+LastFocusedName:=Substr(LastFocused,12)
+for precapskey2 in Account {
+    if (Account[precapskey]=LastFocusedName)
+        CurrentAccKey:=valuesinaccount
+}
+}
+if(CurrentAccKey=valuesinaccount){
+NextKeyCaps:=0
+} else {
+NextKeyCaps:=CurrentAccKey
+}
+while (True) {
+    NextKeyCaps++
+    NextAccount = % Account[NextKeyCaps]
+    if (NextKeyCaps = CurrentAccKey) {
+        GroupActivate, RuneliteD, r
+        break
+    }
+    ifWinExist, % "RuneLite - "NextAccount
+    {
+        WinActivate, % "RuneLite - "NextAccount
+        break
+    }
+    if (NextKeyCaps>=valuesinaccount) {
+         NextKeyCaps:=0
+    }
+}
+donesubcapsa:=0
+GoSub, UpdateOSD
+WinGetActiveTitle, capsTitle
+capsWinUMSwitch:=1
+if (ActiveToggle=1)
+	settimer, ActivateWinUM, on
+return
+
+
+
+capslock & 5::
+CounterWinBack2:=0
+CounterWinBack:=0
+CounterWinBack3:=0
+CounterWinBack4:=0
+chaosBounce:=0
+KeyCount:=0
+setTimer, ChaosTimer, off
+    for key, val in ChaosWindowGUIDArray { 
+        KeyCount++
+    }
+    while (KeyCount>1) {
+        ChaosWindowGUIDArray.removeat(KeyCount)
+        KeyCount--
+    }
+return
+
+Capslock & 4::
+caps_5:
+chaosBounce:=1
+    MouseGetPos,,,ChaosWindowGUID
+for key, val in ChaosWindowGUIDArray { 
+    if (ChaosWindowGUID=val) {
+        return
+    }
+}
+sleep 50
+CounterWinBack2++
+CounterWinBack3++
+ChaosWindowGUIDArray[CounterWinBack2]:=ChaosWindowGUID
+winActivate, ahk_ID %ChaosWindowGUID%
+        WinGetActiveStats, TitleNO, NOWidth, NOHeight, NoXW, NoXY
+        WinName[CounterWinBack2]:=TitleNO
+        WinNameNW[CounterWinBack2]:=NOWidth
+        WinNameNH[CounterWinBack2]:=NOHeight
+        WinNameNoXW[CounterWinBack2]:=NoXW
+        WinNameNoXY[CounterWinBack2]:=NoXY
+        MonArray:=monitorFunc()
+for key, val in MonArray {
+    ChaosArray[CounterWinBack3]:=val
+    CounterWinBack3++
+}    
+CounterWinBack3--    
+
+                        ;6            7        1
+                        ;12            13        
+    AHKCHAOSID:=ChaosWindowGUIDArray[CounterWinBack2]
+    ChaosX[CounterWinBack2]:=((ChaosArray[CounterWinBack3-4] + ChaosArray[CounterWinBack3]/2)-WinNameNW[CounterWinBack2]/2)
+    ChaosY[CounterWinBack2]:=((ChaosArray[CounterWinBack3-5] + ChaosArray[CounterWinBack3-1]/2)-WinNameNH[CounterWinBack2]/2)
+
+    WinMove, ahk_ID %AHKCHAOSID% , , % ChaosX[CounterWinBack2], % ChaosY[CounterWinBack2]
+    RandyRand:=0
+RandyRand:=Rand(1,4)
+cRand1:=Rand(3.5,4.5)
+if(RandyRand=1) {
+chaosDirection[CounterWinBack2]:=-cRand1
+chaosDirection2[CounterWinBack2]:=-cRand1
+} else if(RandyRand=2) {
+chaosDirection[CounterWinBack2]:=-cRand1
+chaosDirection2[CounterWinBack2]:=cRand1
+} else if(RandyRand=3) {
+chaosDirection[CounterWinBack2]:=cRand1
+chaosDirection2[CounterWinBack2]:=-cRand1
+} else if(RandyRand=4) {
+chaosDirection[CounterWinBack2]:=cRand1
+chaosDirection2[CounterWinBack2]:=cRand1
+}
+chaosRandySkip:=1
+sleep 100
+setTimer, ChaosTimer, 50
+setTimer, ChaosTimer, on
+return                                                            
+
+ChaosTimer:
+for keyChaos, valChaos in ChaosWindowGUIDArray {
+if (keyChaos>CounterWinBack2)
+    return
+if (stopToggle!=valChaos) {
+if (chaosRandySkip!=1){
+cRand:=Rand(3.5,4.5)
+            if (ChaosX[keyChaos]>=(ChaosArray[keyChaos*6-2])-WinNameNW[keyChaos]) { 
+                chaosDirection[keyChaos]:=-cRand
+            } else if (ChaosX[keyChaos]<=(ChaosArray[keyChaos*6-4])) { 
+                chaosDirection[keyChaos]:=cRand
+            }
+            if (ChaosY[keyChaos]>=(ChaosArray[keyChaos*6-1]/2)-(WinNameNH[keyChaos]/2)+245) { 
+                chaosDirection2[keyChaos]:=-cRand
+            } else if (ChaosY[keyChaos]<=-(ChaosArray[keyChaos*6-1]/2)+(WinNameNH[keyChaos]/2)+245) {
+                chaosDirection2[keyChaos]:=cRand
+            }
+} else {
+    chaosRandySkip:=0
+}
+ChaosX[keyChaos]:= chaosDirection[keyChaos] + ChaosX[keyChaos]
+ChaosY[keyChaos]:= chaosDirection2[keyChaos] + ChaosY[keyChaos]
+WinMove, ahk_ID %valChaos% , , % ChaosX[keyChaos] , % ChaosY[keyChaos]
+}
+}    
+return
+
+
+Capslock & A::
+CapsA:
+;SetTimer, ActivateWinUM, off
+    sleep 50
+    donesubcapsa:=1
+    CounterWinBack++
+    while (donesubcapsa=1)
+        sleep 1
+WinGet, ChaosWindowGUID , ID
+stopToggle:=ChaosWindowGUID
+        WinGetActiveStats, TitleNO2, NOWidth2, NOHeight2, NoXW2, NoXY2    
+
+
+        WinName2[CounterWinBack]:=TitleNO2
+        WinNameNW2[CounterWinBack]:=NOWidth2
+        WinNameNH2[CounterWinBack]:=NOHeight2
+        WinNameNoXW2[CounterWinBack]:=NoXW2
+        WinNameNoXY2[CounterWinBack]:=NoXY2
+        MonArray2:=monitorFunc()
+        BlockInput, on
+        mousemove, 0, 0
+        WinMove A, , % (MonArray2[2] + MonArray2[6]/2)-NOWidth2/2, % (MonArray2[1] + MonArray2[5]/2)-NOHeight2/2
+sleep 1    
+coordmode, mouse, window
+xRand:=Rand(0,NOWidth2)
+yRand:=Rand(0,NOHeight2)
+bRand:=Rand(1,4)
+if(bRand=1) {
+mousemove, 0-50, yRand
+} else if(bRand=2) {
+mousemove, NOWidth2+50, yRand
+} else if(bRand=3) {
+mousemove, xRand, NOHeight2+50
+} else if(bRand=4) {
+mousemove, xRand, 0-50
+}
+coordmode, mouse, screen
+BlockInput, off
+return        ;;;;
+
+
+;;;;; APACHE PHP BROWSER BOT PARSE PAGES VIA PHP 
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+
+
+WinBack:
+WinBackTimerCounter++
+if (WinBackTimerCounter=5) {
+    for key, val in WinName {
+        WinMove %val%, , % WinNameNoXW[key], % WinNameNoXY[key], % WinNameNW[key], % WinNameNH[key]
+        sleep 200
+    }
+    CounterWinBack:=0 
+    WinBackTimerCounter:=0
+    setTimer, WinBack, off
+}
+return
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+CapsLock & y::
+caps_y:
+run, cmd.exe /c echo "."`>`> F:\Reset1.serbz, min
+run, cmd.exe /c echo "."`>`> F:\Reset2.serbz, min
+if (capsp_press!=2 and capsp_press!=2) {
+		3String=Reloading...
+		3Time:=40*1 ; 40 is one second
+		GuiConF(3,3,3String,-1)
+		sleep 1500
+    }
+for key, value in WinDisable {
+    3String=Reloading... Searching for disabled windows...
+    3Time:=40*1 ; 40 is one second
+    GuiConF(3,3,3String,-1)
+    sleep 200
+    if (value!="REMOVEME") {
+        WinSet, enable, , %value%
+        3String=Reloading... window %value% enabled...
+        3Time:=40*1 ; 40 is one second
+        GuiConF(3,3,3String,-1)
+        sleep 500
+    }
+}
+for key, value in OnTopArray {
+    3String=Reloading... Searching for On Top windows...
+    3Time:=40*1 ; 40 is one second
+    GuiConF(3,3,3String,-1)
+    sleep 200
+    if (value=1){    
+    winset, AlwaysOntop, Off, %key%
+    3String=Reloading... ontop off for %key%...
+    3Time:=40*1 ; 40 is one second
+    GuiConF(3,3,3String,-1)
+    sleep 500
+    }
+}
+reload
+return
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+Capslock & B::
+    3String=Press 1 to clear ALL settings, 2 to clear NON-ACCOUNT settings, anything else to cancel.
+    3Time:=40*20 ;; 40 = 1 second
+    GuiConF(3,3,3String,-1)
+    Input, Outputvar, L1
+    if(Outputvar="1") {
+        goto clearsettings
+    } else if (Outputvar="2") {
+        goto clearsettings
+    } else {
+        3String=Canceled.
+        3Time:=40*2 ;; 40 = 1 second
+        GuiConF(3,3,3String,-1)
+    }
+return
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+Capslock & V::
+if (Debug=1) {
+Debug:=0
+GuiConF(5,2,-1,-1)
+    3String=Debug Disabled.
+    3Time:=40*2 ;; 40 = 1 second
+    GuiConF(3,3,3String,-1)
+} else {
+Debug:=1
+    3String=Debug Enabled.
+    3Time:=40*2 ;; 40 = 1 second
+    GuiConF(3,3,3String,-1)
+}
+return
+
+Capslock & H::
+MouseGetPos,,, WinUMID2
+WinActivate, ahk_id %WinUMID2%
+WinGet, ProcessID, PID, A
+    Run cmd.exe /c taskkill /f /PID %ProcessID%
+return
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+clearsettings:
+if (capsm_press=2 or capsp_press=2) {
+    if (capsm_press=2) {
+        run cmd /c rd /s /q %A_ScriptDir%\SerbzOSD\
+        goto cl_set_msg
+    }
+    ifExist, %A_ScriptDir%\SerbzOSD\RuneLiteDir.log
+        fileDelete, %A_ScriptDir%\SerbzOSD\RuneLiteDir.log
+    IfExist %A_ScriptDir%\SerbzOSD\FFCH.log
+        fileDelete, %A_ScriptDir%\SerbzOSD\FFCH.log
+    ifExist %A_ScriptDir%\SerbzOSD\TimerIsPaused.log
+        fileDelete, %A_ScriptDir%\SerbzOSD\TimerIsPaused.log
+    ifExist %A_ScriptDir%\SerbzOSD\GlobalTimerMinutes.log
+        fileDelete, %A_ScriptDir%\SerbzOSD\GlobalTimerMinutes.log
+    ifExist %A_ScriptDir%\SerbzOSD\GlobalTimerMinR.log
+        fileDelete, %A_ScriptDir%\SerbzOSD\GlobalTimerMinR.log
+    ifExist %A_ScriptDir%\SerbzOSD\GlobalSecondDisplay.log
+        fileDelete, %A_ScriptDir%\SerbzOSD\GlobalSecondDisplay.log
+
+    ifExist %A_ScriptDir%\SerbzOSD\ActiveToggle.log
+        fileDelete, %A_ScriptDir%\SerbzOSD\ActiveToggle.log
+    ifExist %A_ScriptDir%\SerbzOSD\GUI_Names.log
+        fileDelete, %A_ScriptDir%\SerbzOSD\GUI_Names.log
+    ifExist %A_ScriptDir%\SerbzOSD\OSD_MOVE2.log
+        fileDelete, %A_ScriptDir%\SerbzOSD\OSD_MOVE2.log
+    ifExist %A_ScriptDir%\SerbzOSD\OSD_MOVE.log
+        fileDelete, %A_ScriptDir%\SerbzOSD\OSD_MOVE.log
+}
+cl_set_msg:
+    3String=settings cleared - reload in 5 seconds.
+    3Time:=40*2 ;; 40 = 1 second
+    GuiConF(3,3,3String,-1)
+    sleep 2000
+    goto caps_y
+return
+;-------------------------------------;-------------------------------------;-------------------------------------
+Repaint:
+if(!counterM2 or counterM2<0 or counterM2>=counterMM)
+    counterM2:=0
+counterM2++
+if (hdd_frame[counterM2]="destroyed")
+    return
+zoom = 3
+Rx3 := % ResX[counterM2]
+Ry3 := % ResY[counterM2]
+
+if (MouseFollowMag>=1 and MouseFollowMagID=CounterM2 and MouseFollowMagID) {
+    MouseGetPos x2x2, y2y2
+    zoom := 3
+    Zx[MouseFollowMagID] := ResX[MouseFollowMagID]/zoom
+    Zy[MouseFollowMagID] := ResY[MouseFollowMagID]/zoom
+    if (MouseFollowMag=1) {
+        x2[MouseFollowMagID] := x2x2-Zx[MouseFollowMagID]+(ResX[MouseFollowMagID]/zoom)/2
+        y2[MouseFollowMagID] := y2y2-Zy[MouseFollowMagID]+(ResY[MouseFollowMagID]/zoom)
+    } else if (MouseFollowMag=2) {
+        x2[MouseFollowMagID] := 4ThreeX-Zx[MouseFollowMagID]+(ResX[MouseFollowMagID]/zoom)/2
+        y2[MouseFollowMagID] := 4ThreeY-Zy[MouseFollowMagID]+(ResY[MouseFollowMagID]/zoom)
+    }
+}
+xz := % x2[counterM2]-Zy[counterM2]
+   yz := % y2[counterM2]-Zy[counterM2]
+   DllCall("gdi32.dll\StretchBlt"
+   , UInt,hdc_frame[counterM2]
+   , Int,0
+   , Int,0
+   , Int,2*Rx3
+   , Int,2*Ry3
+   , UInt,hdd_frame[counterM2]
+   , UInt,xz
+   , UInt,yz
+   , Int,2*Zx[counterM2]
+   , Int,2*Zy[counterM2]
+   , UInt,0xCC0020) 
+Return
+;-------------------;-------------------;-------------------;
+;-------------------;-------------------;-------------------;
+;-------------------;-------------------;-------------------;
+Timer_Load_Error:
+        3String=Error loading any previous timer.
+        3Time:=40*1 ;; 40 = 1 second
+        GuiConF(3,3,3String,-1)
+        fileDelete, %A_ScriptDir%\SerbzOSD\TimerIsPaused.log
+        fileDelete, %A_ScriptDir%\SerbzOSD\GlobalTimerMinR.log
+        fileDelete, %A_ScriptDir%\SerbzOSD\GlobalSecondDisplay.log
+        SetTimer, UpdateOSD2, off
+        TimerIsRunning:=0
+        TimerIsPaused:=0
+        TimerResetWarning=0
+        GlobalSecondsDisplayInit:=GlobalTotalSeconds
+        GlobalSecondsInitMin:=
+        GlobalTimerMinR:=
+        GlobalSecondDisplay:=60
+        fileDelete, %A_ScriptDir%\SerbzOSD\TimerIsPaused.log
+        fileDelete, %A_ScriptDir%\SerbzOSD\GlobalTimerMinR.log
+        fileDelete, %A_ScriptDir%\SerbzOSD\GlobalSecondDisplay.log
+return
+;-------------------;-------------------;-------------------;
+;-------------------;-------------------;-------------------;
+;-------------------;-------------------;-------------------;
+
+;-------------------;-------------------;-------------------;
+;-------------------;-------------------;-------------------;
+;-------------------;-------------------;-------------------;
+;subhere
+SetTimer_Minutes:
+        if (GlobalSecondsDisplayInit<=0 or timerMessage=TIME) {
+                SetTimer, UpdateOSD2, off
+                GlobalSecondDisplay:=60
+                MouseGetPos, MgetX, MgetY
+                MgetX2:=MgetX+10
+                MgetY2:=MgetY+10
+                InputBox, GlobalTimerMinutes_input, Countdown Timer, number of minutes., , 200, 125, MgetX2, MgetY2
+                GlobalTimerMinutes := % GlobalTimerMinutes_input
+                    If (!GlobalTimerMinutes) {
+                        3String=No Time was entered returning.
+                        3Time:=40*1 ;; 40 = 1 second
+                        GuiConF(3,3,3String,-1)
+                        CapsTAccTimersCounter:=0
+                        return
+                    }
+				;;msgbox, % CS
+                fileDelete, %A_ScriptDir%\SerbzOSD\GlobalTimerMinutes.log
+                sleep 250
+                fileAppend, %GlobalTimerMinutes%, %A_ScriptDir%\SerbzOSD\GlobalTimerMinutes.log
+                if (TimerIsRunning=1 or TimerIsPaused=1)
+                    GoSub timerclear
+                Goto, timer_t
+            } else {
+                3String=Timer Running - Caps+Q to Reset
+                3Time:=40*1 ;; 40 = 1 second
+                GuiConF(3,3,3String,-1)
+        }
+return
+;-------------------;-------------------;-------------------;
+;-------------------;-------------------;-------------------;
+;subhere
+timerclear:
+PlaySound:=2
+SetTimer, AlarmSound, off
+SetTimer, UpdateOSD2, off
+TimerIsRunning:=0
+TimerIsPaused:=0
+TimerResetWarning=0
+GlobalSecondsDisplayInit:=GlobalTotalSeconds
+GlobalSecondsInitMin:=
+GlobalTimerMinR:=
+GlobalSecondDisplay:=
+fileDelete, %A_ScriptDir%\SerbzOSD\TimerIsPaused.log
+fileDelete, %A_ScriptDir%\SerbzOSD\GlobalTimerMinR.log
+fileDelete, %A_ScriptDir%\SerbzOSD\GlobalSecondDisplay.log    
+GuiConF(2,2,-1,-1)    
+WaitJustOneFuckingSecond=3
+SetTimer, 1fuckingsecondtimer, on
+3String=Timer Cleared!
+3Time:=40*1 ;; 40 = 1 second
+GuiConF(3,3,3String,-1)
+WaitJustOneFuckingSecond=0                
+return
+;-------------------------------------;-------------------------------------
+;-----------------------------------
+;-----------Functions---------
+;------------------------
+Rand( a=0.0, b=1 ) {
+   IfEqual,a,,Random,,% r := b = 1 ? Rand(0,0xFFFFFFFF) : b
+   Else Random,r,a,b
+   Return r
+}
+
+
+rsPwStr(){
+counter:=0
+
+l := Rand(13,15)
+Loop, %l% {
+numOrLtr := Rand(33)
+numOrLtr2:=Rand(33)
+if(numOrLtr > numOrLtr2){
+	i = 97
+	x = 122
+} else {
+	i = 48
+	x = 57
+}
+Random, r, i, x
+s .= Chr(r)
+}
+
+Return s
+}
+
+HexToDec(hex)
+{
+    VarSetCapacity(dec, 66, 0)
+    , val := DllCall("msvcrt.dll\_wcstoui64", "Str", hex, "UInt", 0, "UInt", 16, "CDECL Int64")
+    , DllCall("msvcrt.dll\_i64tow", "Int64", val, "Str", dec, "UInt", 10, "CDECL")
+    return dec
+}
+
+return
+/*; RANDOM FUNCTION EXAMPLES
+Rand() ; - A random float between 0.0 and 1.0 (many uses)
+Rand(6) ; - A random integer between 1 and 6 (die roll)
+Rand("") ; - New random seed (selected randomly)
+Rand("", 12345) ; - New random seed (set explicitly)
+Rand(50, 100) ; - Random integer between 50 and 100 (typical use)
+*/
+RandColor() {
+    Random, vRand, 0x4FFFFF, 0xAFFFFF
+    color = % Format("{:06X}", vRand)
+return color
+}
+
+RandColor2() {
+    ;Random, vRand, 0, 0xFFFFFF
+    Random, vRand, 0x4FFFFF, 0xAFFFFF
+    color = % Format("{:06X}", vRand)
+return color
+
+
+}
+GuiSpecificColor(GuiNumber,color) {
+	if (GuiNumber) {
+		Gui, %GuiNumber%: Default
+		GuiControl, +c%color%, MyText
+	}
+	return
+}
+GuiRandColor(GuiNumber) {
+	if (GuiNumber) {
+		Gui, %GuiNumber%: Default
+		Random, vRand, 0x33DE10, 0x33DF10
+		color = % Format("{:06X}", vRand)
+		GuiControl, +c%color%, MyText
+	}
+	return
+}
+GuiWhiteColor(GuiNumber) {
+if (GuiNumber) {
+    Gui, %GuiNumber%: Default
+    GuiControl, +cWhite, MyText
+}
+    return
+}
+RandomStr(l = 16, i = 48, x = 122) { ; length, lowest and highest Asc value
+    Loop, %l% {
+        Random, r, i, x
+        s .= Chr(r)
+    }
+    Return, s
+}
+
+monitorFunc() { 
+MonArray:=Array()
+    CoordMode, Mouse, Screen
+        MouseGetPos, NoX, NoY
+        SysGet, monCount, MonitorCount
+        Loop %monCount%
+        {     
+        SysGet, curMon, Monitor, %a_index%
+            if ( NoX >= curMonLeft and NoX <= curMonRight and NoY >= curMonTop and NoY <= curMonBottom )
+                {
+                    TDISPLAYY      := curMonTop ; can't be less than
+                    TDISPLAYX      := curMonLeft ; can't be less than
+                    TDISPLAYY2        := curMonBottom ; can't be greater
+                    TDISPLAYX2        := curMonRight ; can't be greater
+                    TDISPLAYHeight := curMonBottom - curMonTop
+                    TDISPLAYWidth  := curMonRight  - curMonLeft
+                    
+MonArray := [TDISPLAYY,TDISPLAYX,TDISPLAYY2,TDISPLAYX2,TDISPLAYHeight,TDISPLAYWidth]
+            }
+        }
+
+return MonArray
+}
+
+BuildGUI(GuiNumber) {
+global GuiActiveArray
+global WaitJustOneFuckingSecond
+if (GuiNumber!=0 and GuiNumber) {
+    CustomColor = 000000 ;
+    Gui, %GuiNumber%: Destroy
+    Gui, %GuiNumber%: New, +LastFound -Caption +ToolWindow +AlwaysOnTop +E0x20
+    Gui, %GuiNumber%: Color, 000000
+    if (GuiNumber=1) {
+        Gui, %GuiNumber%: Font, s18, Magneto ; Matura MT Script Capitals ; DejaVu Sans
+        Gui, %GuiNumber%: Add, Text, vMyText +cWhite, XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    } else if (GuiNumber=3 or GuiNumber=5) {
+        Gui, %GuiNumber%: Font, s11, OCR A Std ; Fixedsys ; DejaVu Sans
+        Gui, %GuiNumber%: Add, Text, vMyText +cWhite, XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    } else if (Substr(GuiNumber,1,1)="_") { ; For Dots outlines they have less GUI, only 1 outline, 1 text, 1 dot, built seperately.
+        Gui, %GuiNumber%: Font, s56 ; Mistral ; Franklin Gothic Book ;Corbel
+        Gui, %GuiNumber%: Add, Text, vMyText +cblack, XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+        GuiActiveArray[GuiNumber]:=2 ; set to dot id on active array to 2 for removal later
+        WinSet, TransColor, %CustomColor% 255
+        return
+    } else if (Substr(GuiNumber,1,4)="Note") { ; For Dots outlines they have less GUI, only 1 outline, 1 text, 1 dot, built seperately.
+        Gui, %GuiNumber%: Font, s14, OCR A Std ; Mistral ; Franklin Gothic Book ;Corbel
+        Gui, %GuiNumber%: Add, Text, vMyText +cblack, XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+        GuiActiveArray[GuiNumber]:=3 ; set to dot id on active array to 2 for removal later
+        WinSet, TransColor, %CustomColor% 255
+        return
+    } else if (Substr(GuiNumber,1,4)="Temp") { ; For Dots outlines they have less GUI, only 1 outline, 1 text, 1 dot, built seperately.
+        Gui, %GuiNumber%: Font, s36, OCR A Std ; Mistral ; Franklin Gothic Book ;Corbel
+        Gui, %GuiNumber%: Add, Text, vMyText +cblack, XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+        GuiActiveArray[GuiNumber]:=4 ; set to dot id on active array to 2 for removal later
+        WinSet, TransColor, %CustomColor% 255
+        return
+        } else {
+        Gui, %GuiNumber%: Font, s14, OCR A Std ; Mistral ; Franklin Gothic Book ;Corbel
+        Gui, %GuiNumber%: Add, Text, vMyText +cblack, XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+        
+    }
+WinSet, TransColor, %CustomColor% 255
+GuiActiveArray[GuiNumber]:=1
+    if (GuiNumber>NumAccs) {
+        Gui, %GuiNumber%: Hide
+        WaitJustOneFuckingSecond:=2
+        SetTimer, 1fuckingsecondtimer, on
+        
+    }
+}
+return
+}
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;;-;-;-;-;-;-;-;-;-;-;-
+OutlineBuilder(GuiNumber) {
+global GuiActiveArray
+OutlineBuilder:
+CustomColor2 = 0B0D0F ;
+OutlineCounter:=0
+While (OutlineCounter<4) {
+OutlineCounter++
+GuiOutlineID=%GuiNumber%Outline%OutlineCounter%
+GuiActiveArray[GuiOutlineID]:=1
+if (Substr(GuiOutlineID,1,1)=Chr(8226)) ; For Dots outlines they have less GUI, only 1 outline, 1 text, 1 dot, built seperately.
+    GuiActiveArray[GuiOutlineID]:=2 ; for dots when 2 then remove , then set to 0 , it is how they are identified during this process
+if (Substr(GuiOutlineID,1,4)="Temp") ; For Dots outlines they have less GUI, only 1 outline, 1 text, 1 dot, built seperately.
+    GuiActiveArray[GuiOutlineID]:=4 ; for dots when 2 then remove , then set to 0 , it is how they are identified during this process
+
+Gui, %GuiOutlineID%: Default
+Gui, %GuiOutlineID%: Destroy
+Gui, %GuiOutlineID%: New, +LastFound -Caption +ToolWindow +AlwaysOnTop +E0x20
+Gui, %GuiOutlineID%: Color, %CustomColor2%
+if (GuiNumber=3 or GuiNUmber=5) {
+Gui, %GuiOutlineID%: Font, Bold s11, OCR A Std ; Fixedsys ; DejaVu Sans
+Gui, %GuiOutlineID%: Add, Text, vMyText +c0A0F0A, XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+} else if (GuiNumber=1) {
+Gui, %GuiOutlineID%: Font, s18, Magneto
+Gui, %GuiOutlineID%: Add, Text, vMyText +c0A0F0A, XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+} else if(Substr(GuiOutlineID,1,4)="Temp")  {
+Gui, %GuiOutlineID%: Font, s36, OCR A Std ; Fixedsys ; DejaVu Sans
+Gui, %GuiOutlineID%: Add, Text, vMyText +c0B0D0F, XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+} else if(Substr(GuiOutlineID,1,1)="_")  {
+Gui, %GuiOutlineID%: Default
+Gui, %GuiOutlineID%: Font, s8 ; Fixedsys ; DejaVu Sans
+Gui, %GuiOutlineID%: Add, Text, vMyText +c0B0D0F, XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+WinSet, TransColor, %CustomColor2% 255
+GuiControl, +c0A0B0C, MyText
+    return
+} else if(Substr(GuiOutlineID,1,1)=Chr(8226) or Substr(GuiOutlineID,1,1)="X")  { ; For Dots outlines they have less GUI, only 1 outline, 1 text, 1 dot, built seperately.
+Gui, %GuiOutlineID%: Default
+Gui, %GuiOutlineID%: Font, s57 ; Fixedsys ; DejaVu Sans
+Gui, %GuiOutlineID%: Add, Text, vMyText +c0B0D0F, XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+WinSet, TransColor, %CustomColor2% 255
+GuiControl, +c0A0B0C, MyText
+    return
+} else  {
+
+Gui, %GuiOutlineID%: Font, Bold s14, OCR A Std ; Fixedsys ; DejaVu Sans
+Gui, %GuiOutlineID%: Add, Text, vMyText +c0B0D0F, XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+}
+WinSet, TransColor, %CustomColor2% 255
+GuiControl, +c0A0B0C, MyText
+}
+return
+}
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;;-;-;-;-;-;-;-;-;-;-;-
+/*
+examples:
+Hide a GUI - GuiConF(GUI,2,-1,-1)
+Set Text - GuiConF(GUI,3,TEXT,-1)
+Show Gui - GuiConF(GUI,1,X,Y)
+dots built differently, exceptions made
+*/
+GuiConF(GuiVar,ConType,xLoc,yLoc) {
+Global NumAccs
+Global DotCounter
+    if (GuiVar and xLoc and yLoc) { 
+        if (ConType=1) {
+            xFLoc1:=xLoc+2
+            xFLoc2:=xLoc-2
+            yFLoc1:=yLoc+2
+            yFLoc2:=yLoc-2
+            if (SubStr(GuiVar,1,1)!=Chr(8226) and Substr(GuiVar,1,1)!="X") ; For Dots outlines they have less GUI, only 1 outline, 1 text, 1 dot, built seperately.
+                Gui, %GuiVar%: Show, x%xLoc% y%yLoc% NoActivate
+            GuiVarCounter:=0
+            
+            while (GuiVarCounter<=4) {
+                GuiVarCounter++            
+                
+                                ;Shift bottom Left
+                if (GuiVarCounter=2 and SubStr(GuiVar,1,1)!="_") { ; For Dots outlines they have less GUI, only 1 outline, 1 text, 1 dot, built seperately.
+                    Gui, %GuiVar%Outline%GuiVarCounter%: Show, x%xFLoc1% y%yFLoc2% NoActivate
+                }
+                    ;shift top left
+                    if (GuiVarCounter=3 and SubStr(GuiVar,1,1)!="_") { ; For Dots outlines they have less GUI, only 1 outline, 1 text, 1 dot, built seperately.
+                        Gui, %GuiVar%Outline%GuiVarCounter%: Show, x%xFLoc2% y%yFLoc1% NoActivate
+                    }
+                if (GuiVar!=1) {
+                    ;Shift Top Right
+                if (GuiVarCounter=1) {
+                        
+                        if (SubStr(GuiVar,1,1)="_") { ; For Dots outlines they have less GUI, only 1 outline, 1 text, 1 dot, built seperately.
+                        ;msgbox, % xFLoc3
+                            xFLoc1 := xFLoc1+61
+                        if (DotCounter<100)
+                            xFLoc1 := xFLoc1+4
+                        if (DotCounter<10)
+                            xFLoc1 := xFLoc1+4
+                        yFLoc1 := yFLoc1+70
+                            Gui, %GuiVar%Outline%GuiVarCounter%: Show, x%xFLoc1% y%yFLoc1% NoActivate
+                    return
+                    } else if (SubStr(GuiVar,1,1)=Chr(8226) or Substr(GuiVar,1,1)="X") { ; For Dots outlines they have less GUI, only 1 outline, 1 text, 1 dot, built seperately.
+                        Gui, %GuiVar%Outline1: Default
+            GuiControl,, MyText, % Chr(8226)
+            Gui, %GuiVar%Outline%GuiVarCounter%: Show, x%xFLoc1% y%yFLoc1% NoActivate
+            return
+                        } 
+                    Gui, %GuiVar%Outline%GuiVarCounter%: Show, x%xFLoc1% y%yFLoc1% NoActivate
+                    }
+                ;Shift Bottom Right
+                    if (GuiVarCounter=4 and SubStr(GuiVar,1,1)!="_") { ; For Dots outlines they have less GUI, only 1 outline, 1 text, 1 dot, built seperately.
+                        Gui, %GuiVar%Outline%GuiVarCounter%: Show, x%xFLoc2% y%yFLoc2% NoActivate
+                    }
+                }
+            }
+        } else if (ConType=2) {
+
+            Gui, %GuiVar%: Hide
+        if (SubStr(GuiVar,1,1)=Chr(8226) or Substr(GuiVar,1,1)="X") ; For Dots outlines they have less GUI, only 1 outline, 1 text, 1 dot, built seperately.
+            return
+            if (SubStr(GuiVar,1,1)="_") { ; For Dots outlines they have less GUI, only 1 outline, 1 text, 1 dot, built seperately.
+                Gui, %GuiVar%Outline1: Hide
+                return
+            }
+            GuiVarCounter:=0
+            while (GuiVarCounter<=4) {
+                GuiVarCounter++
+                Gui, %GuiVar%Outline%GuiVarCounter%: Hide
+            }
+        } else if (ConType=3) {
+
+            Gui, %GuiVar%: Default
+            GuiControl,, MyText, %xLoc%
+            if (SubStr(GuiVar,1,1)="_") {            
+                        DotCounter++
+                        Gui, %GuiVar%Outline1: Default
+                        GuiControl,, MyText, %DotCounter%
+            return
+            }
+            GuiVarCounter:=0
+            while (GuiVarCounter<=4) {
+                GuiVarCounter++
+                Gui, %GuiVar%Outline%GuiVarCounter% : Default
+                GuiControl,, MyText, %xLoc%
+            }
+        } else if (ConType=4) {
+            GuiVarCounter:=0
+            while (GuiVarCounter<=4) {
+            GuiVarCounter++
+                if (xLoc=1) {
+                Gui, %GuiVar%Outline%GuiVarCounter% : +AlwaysOnTop
+                    if (GuivarCounter=4)
+                        Gui, %GuiVar%: +AlwaysOnTop
+                    
+                } else if (xLoc=0) {
+                Gui, %GuiVar%Outline%GuiVarCounter% : -AlwaysOnTop
+                    if (GuivarCounter=4)
+                        Gui, %GuiVar%: -AlwaysOnTop
+
+                }
+            }
+        }
+    }
+    return
+}
+Odd(n)
+{
+    return n&1
+}
+Even(n)
+{
+    return mod(n, 2) = 0
+}
+
+
+;-------;-------------------;-------------------;    
+;-----------------;-------------------;-------------------;
+;--------------Timers---------------;-------------------;-------------------;
+;--------------------------------------;-------------------;
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+Synergy:
+MouseGetPos, ThreeX, ThreeY
+winGetClass, synClass, A
+if (CurDisplayCX=ThreeX and CurDisplayCY=ThreeY and synClass="SynergyDesk") {
+		SynActive := 0
+		DebugPriority:=3
+		
+		if (SynX <= 0 or !SynX)
+			SynX := 1
+		if (SynY <= 0 or !SynY)
+			SynY := 1
+		if (SynCounter < 1 or !SynCounter)
+			SynCounter := % Rand(1,2)
+		if (SynCounter2 < 1 or !SynCounter2)
+			SynCounter2 := % Rand(1,2)
+		
+		MonArray:=monitorFunc()
+		CurDisplayW:=MonArray[6]
+		CurDisplayH:=MonArray[5]
+		CurDisplayY:=MonArray[1]
+		CurDisplayX:=MonArray[2]
+
+		MMHeight := % MonArray[5]
+		MMWidth := % MonArray[6]
+		CurDisplayCY := % floor(CurDisplayH/2)
+		CurDisplayCX := % floor(CurDisplayW/2)
+		
+		Gui, 3: Default
+		GuiControl, +cCFBEEF, MyText
+		3String:="Synergy Took Cursor" 
+		;;;%CurDisplayCX%=%ThreeX% %CurDisplayCY%=%ThreeX%
+		3Time:=40*3 ;; 40 = 1 second
+		GuiConF("Temp_Syn",3,3String,-1)
+		sleep, 750
+		SetTimer, Synergy2, 500
+		SetTimer, Synergy2, on
+		SetTimer, Synergy, off
+}
+return
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+Synergy2:
+	winGetClass, synClass, A
+	suspend, on
+		if (CurDisplayCX!=ThreeX and CurDisplayCY!=ThreeY and synClass!="SynergyDesk") {
+			SynActive := 1
+			Gui, 3: Default
+			GuiControl, +cLIME, MyText
+			3String=Cursor Returned
+			3Time:=40*2 ;; 40 = 1 second
+			GuiConF(3,3,3String,-1)			;tooltip, %ThreeX% %ThreeY% %synCount% %3Time% %CurDisplayCX% %CurDisplayCY%
+			GuiWhiteColor(3)
+			DebugPriority:=0
+			suspend, off
+			SetTimer, Synergy, on
+			SetTimer, Synergy2, off
+			return
+		}
+	
+	GuiRandColor("Temp_Syn")
+	3String:="Serbz"
+	;3Time:=3800 ;; 40 = 1 second
+	GuiConF("Temp_Syn",3,3String,-1)
+	
+return
+
+
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+TimersCheck:
+if ((GUI2ActiveMouse!=0 or (3Time>=0) or tickHUD!=0 or Debug!=0)) {
+    SetTimer, Three, on
+}
+if (Debug=1) {
+		if (DebugPriority=3){
+			DebugCycle:=0
+			while (CurDisplayCY = ThreeY and CurDisplayCX = ThreeX) {
+				sleep, 1250
+				DebugCycle++
+				if (DebugCycle = 1)
+					5String=SynX=%SynX% SynY=%SynY% C1=%SynCounter% C2=%SynCounter2% BD1=%SynDirection% BD2=%SynDirection2% CX=%CurDisplayCX% CY=%CurDisplayCY%
+				else if (DebugCycle >= 2) {
+					DebugCycle:=0
+					5String=3Time=%3Time% 3String=%3String%
+
+				}
+				GuiConF(5,3,5String,-1)
+			}
+		} else {
+			if (DebugPriority<=1) {
+				DebugPriority:=1
+				DebugCycle++
+				if (DebugCycle=1) {
+					5String=%DebugCycle%: X: GUI2ActiveMouse %GUI2ActiveMouse% - 3Time %3Time% - MouseMessages %MouseMessages%
+				} else if (DebugCycle>=2){
+					DebugCycle:=0
+					5String=%DebugCycle%: X: tickHUD %tickHUD% - Debug %Debug% - RuneLite Window Count %RuneliteWindowCount% %RuneliteDWindowCount%
+				} 
+			}
+			if (DebugPriority=10) {
+				GuiWhiteColor(5)
+			} else {
+				GuiRandColor(5)
+			}
+		GuiConF(5,3,5String,-1)
+	}
+}
+return
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+Three:
+;critical
+MouseGetPos, ThreeX, ThreeY
+
+
+    if (GUI2ActiveMouse=1 and GlobalTotalSeconds and TimerIsRunning=1) {
+    if(stopThreeGo!=1)
+                MgetX2:=ThreeX+10
+                MgetY2:=ThreeY - 7
+                GuiConF(2,1, MgetX2, MgetY2)            
+    } else if (!GlobalTotalSeconds) {
+            GuiConF(2,2,-1,-1)
+    }
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+    if (3Time>=0 and MouseMessages!=0) {
+    if(stopThreeGo!=1)
+        MouseGetPos, ThreeX, ThreeY
+        
+        if ((CurDisplayCY!=ThreeY and CurDisplayCX!=ThreeX) and (3String!="Synergy Took Cursor" or 3String!="Serbz")) { 
+			3Time--
+				if(3Time>=1)
+					GuiConF(3,1,ThreeX-10,ThreeY+50)
+				else
+					GuiConF(3,2,-1,-1)				
+				GuiConF("Temp_Syn",2,-1,-1)
+			} else {
+				3Time:=0
+            if (SynCounter>=(CurDisplayW/2)-150) {
+                SynDirection:=Rand(-1.5,-0.5)
+            } else if (SynCounter<=-(CurDisplayW/2)+50) {
+                SynDirection:=Rand(0.5,1.5)
+            }
+            if (SynCounter2>=(CurDisplayH/2)-20) {
+                SynDirection2:=% Rand(-1.5,-0.5)
+            } else if (SynCounter2<=-(CurDisplayH/2)+15) {
+                SynDirection2:= % Rand(0.5,1.5)
+            }
+            SynCounter:=SynCounter+(SynDirection*Rand(3,7))
+            SynCounter2:=SynCounter2+SynDirection2
+            SynX:=floor((CurDisplayW/2)+SynCounter)-60+CurDisplayX
+            SynY:=floor((CurDisplayH/2)-SynCounter2)-25+CurDisplayY
+			GuiConF("Temp_Syn",1,SynX,SynY)
+			
+				;msgbox, %SynTickY% %SynTickX%
+			}	
+        } else {
+            GuiConF(3,2,-1,-1)
+            capsp_press:=0
+        }
+    
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+;if (tickHUD=1) { ; and tickLimit!=NaN) {
+if (tickHUD==1 and tickDisplaySetting==1) {
+    if(stopThreeGo!=1)
+        MouseGetPos, ThreeX, ThreeY
+        if (tickDisplaySetting==1) {
+			4ThreeX:=ThreeX-78
+			4ThreeY:=ThreeY-50
+        }
+        if (initTick>=1)
+            GuiConF(4,1,4ThreeX,4ThreeY)
+} else if (tickDisplaySetting==2) {
+        if (initTick>=1 and tickHUD=1) {
+            if (boredCounter>=(CurDisplayW/2)-50) {
+                boredDirection:=Rand(-1.5,-0.5)
+            } else if (boredCounter<=-(CurDisplayW/2)+50) {
+                boredDirection:=Rand(0.5,1.5)
+            }
+            if (boredCounter2>=(CurDisplayH/2)-20) {
+                boredDirection2:=Rand(-1.5,-0.5)
+            } else if (boredCounter2<=-(CurDisplayH/2)+15) {
+                boredDirection2:=Rand(0.5,1.5)
+            }
+            boredCounter:=boredCounter+boredDirection*Rand(3,7)
+            boredCounter2:=boredCounter2+boredDirection2
+            BoredTickX:=floor((CurDisplayW/2)+boredCounter)-60+CurDisplayX
+            BoredTickY:=floor((CurDisplayH/2)-boredCounter2)-25+CurDisplayY
+            GuiConF(4,1,BoredTickX,BoredTickY)
+        }
+        if (Debug=1 and DebugPriority<=2) {
+            fBC2:=floor(boredCounter2)
+            fBC:=floor(boredCounter)
+            fBD:=floor(boredDirection)
+            fBD2:=floor(boredDirection2)
+            DebugPriority:=2
+            5String=X: %ThreeX% %4ThreeX% Y: %ThreeY% %4ThreeY% - B: %fBD% %fBD2% %fBC% %fBC2%
+        }
+} else if (tickDisplaySetting==3) {
+    ThreeSinCosCounter+=10
+    r:=100
+    dir:=1
+    4ThreeX:=(ThreeX+r*cos(((ThreeSinCosCounter-1)/(2*r*3.1416))))-73
+    ;4ThreeX:=(ThreeX+r*-cos(((ThreeSinCosCounter-1)/(2*r*3.1416))))-73
+    4ThreeY:=(ThreeY+dir*r*sin(((ThreeSinCosCounter-1)/(2*r*3.1416))))-10
+    if (initTick>=1)
+        GuiConF(4,1,4ThreeX,4ThreeY)
+
+    if (Debug=1 and DebugPriority<=2) {
+        DebugPriority:=2
+        5String=X: %ThreeX% - %SinCosX% --- Y: %ThreeY% - %SinCosY% 
+    }
+}
+
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;--;-;-
+if (Debug=1) {    
+    if(stopThreeGo!=1) {
+        MouseGetPos, ThreeX, ThreeY
+        5ThreeX:=ThreeX-275
+        5ThreeY:=ThreeY-50
+        GuiConF(5,1,5ThreeX-150,5ThreeY)
+		}
+}
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+if ((GUI2ActiveMouse=0 and 3Time<0 and tickHUD=0 and Debug=0)) {
+    SetTimer, Three, off
+    return
+}
+return
+
+
+
+SaveWait2:
+SaveWaitCounter2--
+if (SaveWaitCounter2<=0) {
+    SetTimer, SaveWait2, off
+}
+return
+;-------------------;-------------------;-------------------;
+;-------------------;-------------------;-------------------;
+;-------------------;-------------------;-------------------;    
+MsgboxMove:
+    IfWinNotExist, %MsgboxMove_String%
+        return 
+SetTimer, MsgboxMove, off
+MouseGetPos, MouseX, MouseY
+MsgBoxMoveMGPX:=MouseX-20
+MsgBoxMoveMGPY:=MouseY-20
+WinMove, %MsgboxMove_String%, , %MsgBoxMoveMGPX%, %MsgBoxMoveMGPY%
+if (ChangeBtnNames=1) {
+    ChangeBtnNames:=0
+    WinActivate %MsgboxMove_String%
+    sleep 100
+    ControlSetText, Button1, &%Btn1_Name%
+    ControlSetText, Button2, &%Btn2_Name%    
+}
+return
+
+;-------------------------------------;-------------------------------------;-------------------------------------
+;----------------------------------- UpdateOSD2 for Timer OSD MM:SS formatting    ----------------------------------                                
+;-------------------------------------;-------------------------------------;-------------------------------------
+
+UpdateOSD2:
+if(TimerIsPaused=1) {
+GuiConF(2,2,-1,-1)
+    return
+}
+Gui, 2: Default
+Gui2Color = % RandColor()
+GuiControl, +c%Gui2Color%, MyText
+if(GlobalSecondsDisplayInit<=0 and GlobalSecondsDisplayInit!=-1){
+    GlobalSecondsDisplayInit:=-1
+    GlobalSecondDisplay:=
+    GlobalSecondsInitMin:=
+    GlobalTimerMinR:=
+    SetTimer, UpdateOSD2, 150
+    return
+} else {
+    if (GlobalSecondsDisplayInit=GlobalSecondsDisplayInit)
+		SetTimer, UpdateOSD2, 1000
+    GlobalSecondDisplay--
+    GlobalSecondsDisplayInit--
+    GlobalSecondsInitMin:=GlobalSecondsDisplayInit/60
+    GlobalTimerMinR:=Floor(GlobalSecondsInitMin)
+        if ( !GlobalSecondDisplay or GlobalSecondDisplay<0) {
+        if (GlobalSecondsDisplayInit>1) {
+                GlobalSecondDisplay:=59
+            } else {
+                GlobalSecondDisplay=0
+            }
+        }
+}
+     if (TimerIsRunning=1) { 
+            if (GlobalSecondsDisplayInit>0) {
+                if(GlobalSecondDisplay<10){
+                    TimerTimeStr=%GlobalTimerMinR%:0%GlobalSecondDisplay%
+                } else {
+                    TimerTimeStr=%GlobalTimerMinR%:%GlobalSecondDisplay%
+                }        
+            }
+                if (GlobalSecondsDisplayInit<=0) {
+                        TimerTimeStr=TIME
+                        
+                        if (colorswap=0) {
+                            colorswap:=1
+                                if(PlaySound=0) { 
+                                PlaySound=1
+                                SetTimer, AlarmSound, 4000
+                                SetTimer, AlarmSound, on
+                            }
+                            GuiControl, +cRED, MyText
+                        } else {
+                            colorswap:=0
+                            GuiControl, +cWHITE, MyText
+                        }
+                } else {
+                ifExist, E:\rsahkvars\TimerCleared.log
+                    fileDelete, E:\rsahkvars\TimerCleared.log
+                }
+        }
+    GuiConF(2,3,TimerTimeStr,-1)
+return
+;-------------------;-------------------;-------------------;
+;-------------------;-------------------;-------------------;
+;-------------------;-------------------;-------------------;
+
+AlarmSound:
+alcounter+=1
+if (AltAlarmSound=1){
+AlarmDir=%A_WinDir%\Media\Alarm07.wav
+SoundSetWaveVolume, 50
+} else {
+AlarmDir = %A_WinDir%\Media\Alarm10.wav
+}
+if (PlaySound=1) {
+    SoundPlay, %AlarmDir%, wait
+} else {
+    PlaySound:=2
+	alcounter:=0
+	SoundPlay, Nonexistent.avi
+    SetTimer, AlarmSound, off    
+}
+if (AltAlarmSound=1 and alcounter>0){
+	AltAlarmSound:=0
+	alcounter:=0
+	SoundSetWaveVolume, 100
+	SoundPlay, Nonexistent.avi
+	SetTimer, AlarmSound, off  
+}
+return
+;--------
+;-------------------;-------------------;-------------------;
+;-------------------;-------------              ------------;
+;-------------------;-------------------;-------------------;
+;                    If window under mouse                    ;
+;                is a runelite window, make it active.        ;
+;-------------------;-------------------;------
+
+ActivateWinUM:
+;if (IsRunelite=1) {
+	MouseGetPos,,, WinUMID
+	WinGetTitle, TitleUnderCursor, ahk_id %WinUMID%
+	wingetactivetitle, AWTitle
+	if (capsWinUMSwitch=1 and (TitleUnderCursor != capsTitle)) {
+		return
+	} else if (capsWinUMSwitch=1 and (AWTitle != capsTitle or capsTitle = TitleUnderCursor)) {
+		capsWinUMSwitch:=0
+	}
+	
+	MouseGetPos,,,,WinCLASS
+    WinGetClass, P_WinCLASS, A
+if ((WinUMID!=P_WinUMID or TitleUnderCursor != AWTitle) and WinCLASS="SunAwtCanvas2" and P_WinCLASS="SunAwtFrame") {
+		P_WinUMID=%WinUMID%
+	WinGetTitle, titleMPOS, ahk_id %WinUMID%
+		for key, value in WinDisable {
+			if (value=titleMPOS) {
+				3Time:=20 ; 40 is one second
+				GuiConF(3,3,"Window Disabled",-1)
+				return
+			}
+			
+			;goto UpdateOSD
+		;}
+}
+WinActivate, ahk_id %WinUMID% ; else if (WinCLASS and WinCLASS!="") {
+; sleep 200
+;}
+gosub, UpdateOSD
+}
+return
+
+ActivateWinUM2: ;NOT USED
+MouseGetPos,,, WinUMID
+WinGetTitle, TitleUnderCursor, ahk_id %WinUMID%
+wingetactivetitle, Title
+if (TitleUnderCursor != Title and Title != ) {
+	for key, val in WinDisable
+	{
+		if (val == WinUMID) {
+			WinActivate, ahk_class Shell_TrayWnd
+			winset, top, , ahk_class Shell_TrayWnd
+			;winset, bottom, , ahk_id WinUMID
+		}
+	}
+}
+;if (IsRunelite=1) {
+
+if (WinUMID!=P_WinUMID) {
+        P_WinUMID=%WinUMID%
+        MouseGetPos,,,,WinCLASS
+        WinGetClass, P_WinCLASS, A
+        DebugPriority:=7
+        5String:= % P_WinCLASS
+    if(WinCLASS="SunAwtCanvas2" and P_WinCLASS="SunAwtFrame") {
+    if(WinDisable!=[] and WinDisable!="") { ; WinDisable!= and 
+	WinGetTitle, titleMPOS, ahk_id %WinUMID%
+        for key, value in WinDisable {
+            if (value=titleMPOS) {
+                3Time:=20 ; 40 is one second
+                GuiConF(3,3,"Window Disabled",-1)
+                return
+            }
+        }
+		}
+            WinActivate, ahk_id %WinUMID%
+            
+        
+} ; else if (WinCLASS and WinCLASS!="") {
+; sleep 200
+}
+;}
+return
+
+SaveWait:
+SaveWaitCounter--
+if (SaveWaitCounter<=0) {
+    SetTimer, SaveWait, off
+    ifExist, %A_ScriptDir%\SerbzOSD\OSD_MOVE2.log
+        fileDelete, %A_ScriptDir%\SerbzOSD\OSD_MOVE2.log
+    ifExist, %A_ScriptDir%\SerbzOSD\OSD_MOVE.log
+        fileDelete, %A_ScriptDir%\SerbzOSD\OSD_MOVE.log
+    fileAppend, %OSD_MOVE%, %A_ScriptDir%\SerbzOSD\OSD_MOVE.log
+    fileAppend, %OSD_MOVE2%, %A_ScriptDir%\SerbzOSD\OSD_MOVE2.log
+}
+return
+
+
+;-------------------------------------;-------------------------------------;-------------------------------------
+;------------------ UpdateOSD Getting current window and choosing when and where to draw    ----------------------                            
+;-------------------------------------;-------------------------------------;-------------------------------------
+
+UpdateOSD:
+;;    if (NoAHKVars=0) {
+;    ifExist, %A_ScriptDir%\SerbzOSD\reloadmsg.txt
+;    {
+;        FileDelete, %A_ScriptDir%\SerbzOSD\reloadmsg.txt
+;        3String=Reloading Logins OBS Twitch PC2 PC3 PC4...
+;        3Time:=40*1 ; 40 is one second
+;        GuiConF(3,3,3String,-1)
+;    }
+;}
+O_Title = %Title%
+WinGetActiveTitle, Title
+if(O_Title!=Title) {
+		IsRunelite := 0
+		WinMatch:=0
+	if (OnTopArray[Title]=1) {
+		for GuiKeyCheck, GuiValueCheck in GuiActiveArray {
+			if instr(GuiKeyCheck,"Outline") { 
+				Gui, %GuiKeyCheck%: +AlwaysOntop
+			}
+		}
+		for GuiKeyCheck, GuiValueCheck in GuiActiveArray {    
+			if !instr(GuiKeyCheck,"Outline") { 
+				Gui, %GuiKeyCheck%: +AlwaysOntop
+				
+			}
+		}
+	OnTopArray[Title]:=2
+	}
+	 if OnTopArray[O_Title]=2 {
+		OntopArray[O_Title]:=1
+	}
+	IsRunelite := % RegExMatch(StrReplace(Title,"Runelite - ","RLWINDOW"),"RLWINDOW(.*)")
+	if (IsRunelite=1) {
+		NameCheck1 := % SubStr(Title, 12)
+		if !NameCheck1
+			return
+		NameKnown:=0
+		WinChangeCounterColor:=0
+		;#########
+		for AccKey, AccValue in Account {
+			if (NameCheck1=AccValue) {
+				NameKnown:=1
+				LastFocused:=Title
+				WinChangeCounterColor:=AccKey
+				if (CounterFuncArray[AccKey]) {
+					counterkey=% CounterFuncArray[AccKey]
+				} else {
+					counterkey:=
+				}
+				WinMatch:=1
+			break
+		}  
+	}
+	if (NameKnown!=1) {                
+		ifExist %A_ScriptDir%\SerbzOSD\NumAccs.log
+				FileDelete, %A_ScriptDir%\SerbzOSD\NumAccs.log
+			NumAccs++
+			fileAppend, %NumAccs%, %A_ScriptDir%\SerbzOSD\NumAccs.log
+			ifExist %A_ScriptDir%\SerbzOSD\Account%NumAccs%.log
+				FileDelete, %A_ScriptDir%\SerbzOSD\Account%NumAccs%.log
+			fileAppend, %NameCheck1%, %A_ScriptDir%\SerbzOSD\Account%NumAccs%.log
+			Account.Insert(NameCheck1)
+			AccountIndex := % Account.MaxIndex()-1
+			return
+	}
+	While (WinChangeCounterColor>6) {
+					WinChangeCounterColor:=WinChangeCounterColor-6
+				}
+				if (WinChangeCounterColor=1) {
+					AccColorWinChange=White
+				} else if (WinChangeCounterColor=2) {
+					AccColorWinChange=Lime
+				} else if (WinChangeCounterColor=3) {
+					AccColorWinChange=7fe5f0 
+				} else if (WinChangeCounterColor=4) {
+					AccColorWinChange=Red
+				} else if (WinChangeCounterColor=5) {
+					AccColorWinChange=8470FF
+				} else if (WinChangeCounterColor=6){
+					AccColorWinChange=Yellow 
+				} 
+					StringReplace, NTitle, Title, RuneLite -, , All        ;;; ---- This allows for the OSD to remain drawn when focusing other windows
+					
+
+					Gui, 1: Default
+					GuiControl, +c%AccColorWinChange%, MyText
+					GuiConF(1,3,NTitle,-1)
+	}
+}
+
+if (WinMatch=1 and IsRunelite=1) {     ;;; ----- Added so that when non-runelite window is focused this data data for active window does not update
+    
+    WinGetActiveStats, Title, wWidth, wHeight, WX, WY
+    WY+=OSD_MOVE2+50
+    WX+=OSD_MOVE+10
+    if (counterkey>0)
+        NTitle = %NTitle% - %counterkey%
+    if(GUI_Names=1)
+        GuiConF(1,1,WX,WY)
+    
+} else {
+	GuiConF(1,2,-1,-1)
+}
+    if ((TimerIsRunning=1 or TimerIsPaused=1) and (TimerMouseT=1 or TimerMouseT=0)) { 
+        GUI2ActiveMouse:=1
+    } else {
+            GuiConF(2,2,-1,-1)
+            GUI2ActiveMouse:=0
+    }
+        
+    return
+;-------------------;-------------------;-------------------;
+;-------------------;-------------------;-------------------;
+;-------------------;-------------------;-------------------;        
+
+1fuckingsecondtimer:
+WaitJustOneFuckingSecond--
+if (WaitJustOneFuckingSecond<=2) {
+}
+if (WaitJustOneFuckingSecond<=-1) {
+    SetTimer, 1fuckingsecondtimer, off
+}
+return
+;-------------------;-------------------;-------------------;
+;-------------------;-------------------;-------------------;
+;-------------------;-------------------;-------------------;
+AccTimers:
+AccTimersTimerCounter++
+ATimersCC:=0
+for keyATimersCC, valueATimersCC in AccTimerTSec {
+    if (valueATimersCC>=1) {
+        ATimersCC++
+    }
+}
+if (ATimersCC<=0) {
+    Goto, AccTimers
+}
+fkbud:
+if (WaitJustOneFuckingSecond<=-1) {
+    for KATimerFP in Account {
+            KATimerFPAccount := ASTWindow[KATimerFP]
+            GuiFkBud:=KATimerFP+NumAccs
+            WinGetActiveTitle, aTitle2
+    if (GuiFkBud!=0 and GuiFkBud) {
+    if (AccTimerTSec[KATimerFP]<=2) 
+        GuiConF(GuiFkBud,2,-1,-1)
+    if (aTitle2="RuneLite - "Account[KATimerFP] and (ATimersIsOntop[KATimerFP]=0 or !ATimersIsOntop[KATimerFP])) {
+        GuiConF(GuiFkBud,4,1,-1)
+        ATimersIsOntop[KATimerFP]:=1
+                        
+        5String:= % ATimersIsOntop[KATimerFP] Account[KATimerFP]
+
+    } else if (ATimersIsOntop[KATimerFP]=1 and aTitle2!="RuneLite - "Account[KATimerFP]) { 
+        GuiConF(GuiFkBud,4,0,-1)
+        ATimersIsOntop[KATimerFP]:=0
+    }
+            if (AccTimerTSec[KATimerFP]>0) {
+                    WinGetPos, TimerMgetX, TimerMGetY, WWW, HHH, %KATimerFPAccount%
+                    TimerMgetX:=TimerMgetX+OSD_MOVE+40
+                    TimerMGetY:=TimerMGetY+OSD_MOVE2+120
+                    GuiRandColor(GuiFkBud)
+                    GuiControl, +c%AccountGUIColor%, MyText
+                    if (TimerMgetX and TimerMGetY)
+                        GuiConF(GuiFkBud,1,TimerMgetX,TimerMGetY)
+            } else if (AccTimerTSec[KATimerFP]<=0 and AccTimerTSec[KATimerFP] and GuiFkBud>NumAccs) { 
+                            if(PlaySound=0) { 
+                                PlaySound=1
+                                SetTimer, AlarmSound, 4000
+                                SetTimer, AlarmSound, on
+                            }
+                GuiConF(GuiFkBud,2,-1,-1)
+                AccTimerTSec.RemoveAt(KATimerFP)
+                AccTimerTSecMin.RemoveAt(KATimerFP)
+                AccTimerFTMin.RemoveAt(KATimerFP)
+                AccTimerCDSec.RemoveAt(KATimerFP)
+            }
+        } 
+    }        
+}
+if (AccTimersTimerCounter>=10) {
+AccTimersTimerCounter:=0
+for keyAccTimers in Account {
+    AccTimerAcc3:=% Account[keyAccTimers]
+    GuiNumberTHESEFORLOOPS:=keyAccTimers+NumAccs
+    if (AccTimerTSec[keyAccTimers]>0) {
+            AccTimerCDSec[keyAccTimers]--
+            if (AccTimerCDSec[keyAccTimers]<=0) {
+                    AccTimerCDSec[keyAccTimers]:=60
+            }
+            AccTimerTSec[keyAccTimers]:=AccTimerTSec[keyAccTimers]-1
+            AccTimerTSecMin[keyAccTimers]:=AccTimerTSec[keyAccTimers]/60
+            AccTimerFTMin[keyAccTimers]:=Floor(AccTimerTSecMin[keyAccTimers])
+            AccTimerMinFloor = % AccTimerFTMin[keyAccTimers]
+            AccTimerCDownSec = % AccTimerCDSec[keyAccTimers]        
+        if(AccTimerCDSec[keyAccTimers]<10){
+            AccTimerTimeStr2=0
+        } else {
+            AccTimerTimeStr2=
+        }
+    AccTimerTimeStrVAR=%AccTimerMinFloor%:%AccTimerTimeStr2%%AccTimerCDownSec%
+        if (AccTimerTimeStrVAR="0:60") {
+            GuiConF(GuiNumberTHESEFORLOOPS,2,-1,-1)
+			AltAlarmSound:=1
+			PlaySound:=1
+			SetTimer, AlarmSound, 750
+            SetTimer, AlarmSound, on
+        }
+        GuiConF(GuiNumberTHESEFORLOOPS, 3, AccTimerTimeStrVAR, -1)
+            AccTotalSecMaxIndex:=AccTimerTSec.MaxIndex()
+
+            }     
+        }        
+    }
+return
+
+
+;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+tickHUD:
+if (tickLimit!=NaN and tickHUD=1) {
+    tickCounter++
+    TickTockTickTock++
+    if (tickLimit>0 and tickCounter>tickLimit) {
+        tickCounter=1
+    }
+
+        if (TickTockTickTock=1) 
+            TockTockTickText=/  %tickCounter%  /    
+        if (TickTockTickTock=2)
+            TockTockTickText=|  %tickCounter%  |
+        if (TickTockTickTock=3)
+            TockTockTickText=\  %tickCounter%  \
+        if (TickTockTickTock=4) {
+            TockTockTickText=-- %tickCounter% --
+            TickTockTickTock:=0
+        }
+GuiRandColor(4)
+GuiConF(4, 3, TockTockTickText, -1)
+} else { 
+setTimer, tickHUD, off
+GuiConF(4,2,-1,-1)
+tickCounter:=0
+}
+initTick++
+return
+
