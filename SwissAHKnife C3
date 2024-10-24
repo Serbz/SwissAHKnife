@@ -379,6 +379,7 @@ MarkerArrayX:=Array()
 xz := Array()
 yz := Array()
 RLUID:=
+randomvolasstimervar:=0
 Zy := Array()
 Zx := Array()
 ResX := Array()
@@ -427,6 +428,7 @@ offset1:=0
 offset2:=0
 TockTockTickText:=
 TickTockTickTock:=0
+GlobalMouseCounter:=0
 tickHUD=0
 initTick:=0
 SkipCounterT:=
@@ -446,6 +448,8 @@ pwchcrVar1:=
 pwCounterVar:=0
 pwInActive:=False
 T:=
+FBC:=0
+FBC2:=0
 SynActive:=1
 OutputVar3:=0
 OutputVar2:=0
@@ -490,8 +494,6 @@ pwselect:=""
 pwstring:=""
 newPW:=""
 MouseFollowMagID:=0
-4ThreeX:=0
-4ThreeY:=0
 monstats:=
 GTMDiff:=0
 monH:=
@@ -548,6 +550,8 @@ Gui, %GuiNUmber%: Hide
 }
 ;--------;--------;--------;--------
 
+OutlineBuilder("COUNTER_")
+BuildGUI("COUNTER_")
 OutlineBuilder("Temp_Syn")
 BuildGUI("Temp_Syn")
 
@@ -779,7 +783,8 @@ ctrlCVar:=0
 coordCounter:=-1
 Fkey := True
 ;-;-;-;-;-;-
-
+SetTimer , RandomVolForAssholes, 1000
+SetTimer , RandomVolForAssholes, off
 SetTimer, UpdateOSD, 100
 SetTimer, UpdateOSD, on
 SetTimer, UpdateOSD2, 1000
@@ -1089,12 +1094,19 @@ return
 ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
 
 
-
-numpadDot::run, "E:\God_Proof\Document\PyTIR\PyTIR.bat"
-numpad0::
-;run, taskkill /f /im "python.exe"
-sleep, 250
-run, "E:\God_Proof\Document\AUDIOPROJ\aud.py.bat"
+numpad1::
+if (randomvolasstimervar != 1) {
+	setTimer, RandomVolForAssholes, on
+	
+	randomvolasstimervar := 1
+} else {
+randomvolasstimervar := 0
+setTimer, RandomVolForAssholes, off
+}
+return
+;numpadDot::run, cmd /k "F:\Tools\Python39\python.exe" "D:\GP\PyGAud - PyTIR - TTS\PyTIR\PyTIR.bat" && pause && exit"
+numpad0::run, cmd /k "F:\Tools\Python39\python.exe "D:\GP\PyGAud - PyTIR - TTS\aud.py" && pause && exit"
+numpadDot::run, cmd /k "F:\Tools\Python39\python.exe "D:\GP\PyGAud - PyTIR - TTS\PyTIR\PyTIR.py" && pause && exit"
 ;run python "E:\God_Proof\Document\AUDIOPROJ\aud.py"
 return
 ;numpad1::
@@ -1221,6 +1233,8 @@ macroplay:
 	sleep, 150
 	mousegetpos, xx2, yy2
 	blockinput, on
+	sendinput, {w up}
+	sendinput, {lctrl up}
 	counter = 0
 	for each, key in xmcoordArray {
 	
@@ -2476,12 +2490,26 @@ MarkersNotesMagnifiers=Magnifiers
 3String=Current Caps + LB/RB/MB/C/X selections set to MAGNIFIERS.
 3Time:=40*2 ;; 40 = 1 second
 GuiConF(3,3,3String,-1)
+} else if (MarkersNotesMagnifiers="Magnifiers") {
+MarkersNotesMagnifiers=Counter
+3String=Current Caps + LB/RB/MB/C/X selections set to COUNTER.
+3Time:=40*2 ;; 40 = 1 second
+GuiConF(3,3,3String,-1)
 } else {
 MarkersNotesMagnifiers=Notes
 3String=Current Caps + LB/RB/MB/C/X selections set to NOTES.
 3Time:=40*2 ;; 40 = 1 second
 GuiConF(3,3,3String,-1)
 }
+return
+#if MarkersNotesMagnifiers="Counter" and KeysSet=1 and InitFinish=1
+Capslock & LButton::
+GlobalMouseCounter++
+GuiConf("COUNTER_",3,GlobalMouseCounter, -1)
+return
+Capslock & RButton::
+GlobalMouseCounter:=0
+GuiConf("COUNTER_",2,-1, -1)
 return
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
 #if MarkersNotesMagnifiers="Notes" and KeysSet=1 and InitFinish=1
@@ -2666,15 +2694,15 @@ if(!counterMM or counterMM<=0)
     counterMM:=0
 MouseGetPos x, y
 if (counterPMM=1) {
-    Rx1 := x+15
-    Ry1 := y-5
+    Rx1 := x+23
+    Ry1 := y-15
     OutlineBuilder("X1")
     GuiConF("X1", 1,x-84,y-86)
         3String=Top Left corner set.
         3Time:=40*2 ;; 40 = 1 second
         GuiConF(3,3,3String,-1)
 } else if (counterPMM=2) {
-    Rx2 := x-15
+    Rx2 := x+18
     Ry2 := y+5
         3String=Bottom Right corner set.
         3Time:=40*2 ;; 40 = 1 second
@@ -2688,7 +2716,7 @@ if (counterPMM=1) {
     Ry := ResY[counterMM]
     Gui Magnifier%counterMM%: Default
     Gui Magnifier%counterMM%: new, +AlwaysOnTop -0xC00000
-    Gui Show, % "w" ((2*Rx)-10) " h" ((2*Ry)-30) " x" x " y" y "", Magnifier%counterMM%
+    Gui Show, % "w" ((2*Rx)) " h" ((2*Ry)) " x" x " y" y "", Magnifier%counterMM%
     WinGet MagnifierID, id,  Magnifier%counterMM%
     WinGet PrintSourceID, ID
     hdd_frame[counterMM] := DllCall("GetDC", UInt, PrintSourceID)
@@ -3225,6 +3253,7 @@ if (TimerIsRunning=0 and TimerIsPaused=0) {
 }
 return
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
+
 Capslock & 3::
     3String=3 to count up, 2 to clear.
     3Time:=40*1 ; 40 is one second
@@ -3861,8 +3890,11 @@ if (MouseFollowMag>=1 and MouseFollowMagID=CounterM2 and MouseFollowMagID) {
         x2[MouseFollowMagID] := x2x2-Zx[MouseFollowMagID]+(ResX[MouseFollowMagID]/zoom)/2
         y2[MouseFollowMagID] := y2y2-Zy[MouseFollowMagID]+(ResY[MouseFollowMagID]/zoom)
     } else if (MouseFollowMag=2) {
-        x2[MouseFollowMagID] := 4ThreeX-Zx[MouseFollowMagID]+(ResX[MouseFollowMagID]/zoom)/2
-        y2[MouseFollowMagID] := 4ThreeY-Zy[MouseFollowMagID]+(ResY[MouseFollowMagID]/zoom)
+		;msgbox, here
+        ;x2[MouseFollowMagID] := (BoredTickX+((ResX[counterM2]/zoom)/2)+42)-Zx[MouseFollowMagID]+(ResX[MouseFollowMagID]/zoom)/2
+        x2[MouseFollowMagID] := (BoredTickX)-Zx[MouseFollowMagID]+(ResX[MouseFollowMagID]/zoom)/2
+        ;y2[MouseFollowMagID] := (BoredTickY+((ResY[counterM2]/zoom)/2))-Zy[MouseFollowMagID]+(ResY[MouseFollowMagID]/zoom)
+        y2[MouseFollowMagID] := (BoredTickY)-Zy[MouseFollowMagID]+(ResY[MouseFollowMagID]/zoom)
     }
 }
 xz := % x2[counterM2]-Zy[counterM2]
@@ -4101,7 +4133,7 @@ if (GuiNumber!=0 and GuiNumber) {
         GuiActiveArray[GuiNumber]:=2 ; set to dot id on active array to 2 for removal later
         WinSet, TransColor, %CustomColor% 255
         return
-    } else if (Substr(GuiNumber,1,4)="Note") { ; For Dots outlines they have less GUI, only 1 outline, 1 text, 1 dot, built seperately.
+    } else if (Substr(GuiNumber,1,4)="Note" or Substr(GuiNumber,1,6)="COUNTER") { ; For Dots outlines they have less GUI, only 1 outline, 1 text, 1 dot, built seperately.
         Gui, %GuiNumber%: Font, s14, OCR A Std ; Mistral ; Franklin Gothic Book ;Corbel
         Gui, %GuiNumber%: Add, Text, vMyText +cblack, XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         GuiActiveArray[GuiNumber]:=3 ; set to dot id on active array to 2 for removal later
@@ -4116,16 +4148,17 @@ if (GuiNumber!=0 and GuiNumber) {
         } else {
         Gui, %GuiNumber%: Font, s14, OCR A Std ; Mistral ; Franklin Gothic Book ;Corbel
         Gui, %GuiNumber%: Add, Text, vMyText +cblack, XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-        
+        ;return
     }
 WinSet, TransColor, %CustomColor% 255
-GuiActiveArray[GuiNumber]:=1
-    if (GuiNumber>NumAccs) {
-        Gui, %GuiNumber%: Hide
-        WaitJustOneFuckingSecond:=2
-        SetTimer, 1fuckingsecondtimer, on
+;GuiActiveArray[GuiNumber]:=1
+;    if (GuiNumber>NumAccs and InitFinish!=1) {
+;        Gui, %GuiNumber%: Hide
+
         
-    }
+;    }
+WaitJustOneFuckingSecond:=2
+SetTimer, 1fuckingsecondtimer, on
 }
 return
 }
@@ -4419,7 +4452,11 @@ Three:
 ;critical
 MouseGetPos, ThreeX, ThreeY
 
-
+	if(GlobalMouseCounter>=1){
+		GlobalMCX:=ThreeX+20
+		GlobalMCY:=ThreeY+10
+		GuiConf("COUNTER_",1, GlobalMCX, GlobalMCY) 
+	}
     if (GUI2ActiveMouse=1 and GlobalTotalSeconds and TimerIsRunning=1) {
     if(stopThreeGo!=1)
                 MgetX2:=ThreeX+10
@@ -4468,6 +4505,7 @@ MouseGetPos, ThreeX, ThreeY
 ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
 ;if (tickHUD=1) { ; and tickLimit!=NaN) {
 if (tickHUD==1 and tickDisplaySetting==1) {
+	;msgbox, here
     if(stopThreeGo!=1)
         MouseGetPos, ThreeX, ThreeY
         if (tickDisplaySetting==1) {
@@ -4494,9 +4532,10 @@ if (tickHUD==1 and tickDisplaySetting==1) {
             BoredTickY:=floor((CurDisplayH/2)-boredCounter2)-25+CurDisplayY
             GuiConF(4,1,BoredTickX,BoredTickY)
         }
+
         if (Debug=1 and DebugPriority<=2) {
-            fBC2:=floor(boredCounter2)
-            fBC:=floor(boredCounter)
+			fBC2:=floor(boredCounter2)
+			fBC:=floor(boredCounter)
             fBD:=floor(boredDirection)
             fBD2:=floor(boredDirection2)
             DebugPriority:=2
@@ -4528,7 +4567,7 @@ if (Debug=1) {
 		}
 }
 ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
-if ((GUI2ActiveMouse=0 and 3Time<0 and tickHUD=0 and Debug=0)) {
+if ((GUI2ActiveMouse=0 and 3Time<0 and tickHUD=0 and Debug=0 and GlobalMouseCounter==0)) {
     SetTimer, Three, off
     return
 }
@@ -4629,6 +4668,12 @@ return
 ;-------------------;-------------------;-------------------;
 ;-------------------;-------------------;-------------------;
 ;-------------------;-------------------;-------------------;
+
+RandomVolForAssholes:
+var := Rand(10000)
+setTimer, RandomVolForAssholes, %var%
+SoundSetWaveVolume, Rand(100)
+return
 
 AlarmSound:
 alcounter+=1
