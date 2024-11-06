@@ -550,8 +550,7 @@ Gui, %GuiNUmber%: Hide
 }
 ;--------;--------;--------;--------
 
-OutlineBuilder("COUNTER_")
-BuildGUI("COUNTER_")
+
 OutlineBuilder("Temp_Syn")
 BuildGUI("Temp_Syn")
 
@@ -1225,6 +1224,9 @@ return
 ;-;-;-;-;-;- Play macro
 LCTRL & w::
 macroplay:
+;;"
+	sendinput, {w up}
+	;;sendinput, {lctrl up}
 	3String=play
 	3Time:=40*2 ;; 40 = 1 second
 	GuiConF(3,3,3String,-1)
@@ -2505,11 +2507,12 @@ return
 #if MarkersNotesMagnifiers="Counter" and KeysSet=1 and InitFinish=1
 Capslock & LButton::
 GlobalMouseCounter++
-GuiConf("COUNTER_",3,GlobalMouseCounter, -1)
+3Time:=40*2 ;; 40 = 1 second
+GuiConf(3,3,GlobalMouseCounter, -1)
 return
 Capslock & RButton::
 GlobalMouseCounter:=0
-GuiConf("COUNTER_",2,-1, -1)
+;GuiConf("COUNTER_",2,-1, -1)
 return
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
 #if MarkersNotesMagnifiers="Notes" and KeysSet=1 and InitFinish=1
@@ -4133,7 +4136,7 @@ if (GuiNumber!=0 and GuiNumber) {
         GuiActiveArray[GuiNumber]:=2 ; set to dot id on active array to 2 for removal later
         WinSet, TransColor, %CustomColor% 255
         return
-    } else if (Substr(GuiNumber,1,4)="Note" or Substr(GuiNumber,1,6)="COUNTER") { ; For Dots outlines they have less GUI, only 1 outline, 1 text, 1 dot, built seperately.
+    } else if (Substr(GuiNumber,1,4)="Note") { ; For Dots outlines they have less GUI, only 1 outline, 1 text, 1 dot, built seperately.
         Gui, %GuiNumber%: Font, s14, OCR A Std ; Mistral ; Franklin Gothic Book ;Corbel
         Gui, %GuiNumber%: Add, Text, vMyText +cblack, XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         GuiActiveArray[GuiNumber]:=3 ; set to dot id on active array to 2 for removal later
@@ -4151,12 +4154,10 @@ if (GuiNumber!=0 and GuiNumber) {
         ;return
     }
 WinSet, TransColor, %CustomColor% 255
-;GuiActiveArray[GuiNumber]:=1
-;    if (GuiNumber>NumAccs and InitFinish!=1) {
-;        Gui, %GuiNumber%: Hide
-
-        
-;    }
+GuiActiveArray[GuiNumber]:=1
+    if (GuiNumber>NumAccs and InitFinish!=1) {
+        Gui, %GuiNumber%: Hide       
+    }
 WaitJustOneFuckingSecond:=2
 SetTimer, 1fuckingsecondtimer, on
 }
@@ -4452,11 +4453,11 @@ Three:
 ;critical
 MouseGetPos, ThreeX, ThreeY
 
-	if(GlobalMouseCounter>=1){
-		GlobalMCX:=ThreeX+20
-		GlobalMCY:=ThreeY+10
-		GuiConf("COUNTER_",1, GlobalMCX, GlobalMCY) 
-	}
+	;if(GlobalMouseCounter>=1){
+	;	GlobalMCX:=ThreeX+20
+	;	GlobalMCY:=ThreeY+10
+	;	GuiConf(3,1, GlobalMCX, GlobalMCY) 
+	;}
     if (GUI2ActiveMouse=1 and GlobalTotalSeconds and TimerIsRunning=1) {
     if(stopThreeGo!=1)
                 MgetX2:=ThreeX+10
@@ -4707,7 +4708,40 @@ return
 ;                is a runelite window, make it active.        ;
 ;-------------------;-------------------;------
 
-ActivateWinUM:
+ActivateWinUM3: ;Not USED
+;if (IsRunelite=1) {
+	MouseGetPos,,, WinUMID
+	WinGetTitle, TitleUnderCursor, ahk_id %WinUMID%
+	wingetactivetitle, AWTitle
+	if (capsWinUMSwitch=1 and (TitleUnderCursor != capsTitle)) {
+		return
+	} else if (capsWinUMSwitch=1 and (AWTitle != capsTitle or capsTitle = TitleUnderCursor)) {
+		capsWinUMSwitch:=0
+	}
+	WinGetTitle, titleMPOS, ahk_id %WinUMID%
+	MouseGetPos,,,,WinCLASS
+	WinGetClass, P_WinCLASS, A
+	for key, value in WinDisable {
+		if (value=titleMPOS) {
+			if ((WinUMID!=P_WinUMID or TitleUnderCursor != AWTitle) and WinCLASS="SunAwtCanvas2" and P_WinCLASS="SunAwtFrame") {
+				3Time:=20 ; 40 is one second
+				GuiConF(3,3,"Window Disabled",-1)
+				return
+			} else if (WinCLASS = "MozillaWindowClass") { ;; For some reason this didn't work as intended idk
+				WinSet, Bottom,,ahk_id %WinUMID%
+				WinActivate, ahk_class Shell_TrayWnd
+				return
+			}
+		}
+	}
+WinActivate, ahk_id %WinUMID% ; else if (WinCLASS and WinCLASS!="") {
+; sleep 200
+;}
+gosub, UpdateOSD
+
+return
+
+ActivateWinUM: 
 ;if (IsRunelite=1) {
 	MouseGetPos,,, WinUMID
 	WinGetTitle, TitleUnderCursor, ahk_id %WinUMID%
@@ -4987,12 +5021,14 @@ for keyAccTimers in Account {
     GuiNumberTHESEFORLOOPS:=keyAccTimers+NumAccs
     if (AccTimerTSec[keyAccTimers]>0) {
             AccTimerCDSec[keyAccTimers]--
-            if (AccTimerCDSec[keyAccTimers]<=0) {
-                    AccTimerCDSec[keyAccTimers]:=60
-            }
-            AccTimerTSec[keyAccTimers]:=AccTimerTSec[keyAccTimers]-1
+			AccTimerTSec[keyAccTimers]:=AccTimerTSec[keyAccTimers]-1
             AccTimerTSecMin[keyAccTimers]:=AccTimerTSec[keyAccTimers]/60
             AccTimerFTMin[keyAccTimers]:=Floor(AccTimerTSecMin[keyAccTimers])
+            if (AccTimerCDSec[keyAccTimers]<0) {
+                    AccTimerCDSec[keyAccTimers]:=59
+					;AccTimerFTMin[keyAccTimers] := AccTimerFTMin[keyAccTimers] -1
+            }
+
             AccTimerMinFloor = % AccTimerFTMin[keyAccTimers]
             AccTimerCDownSec = % AccTimerCDSec[keyAccTimers]        
         if(AccTimerCDSec[keyAccTimers]<10){
@@ -5000,16 +5036,18 @@ for keyAccTimers in Account {
         } else {
             AccTimerTimeStr2=
         }
-    AccTimerTimeStrVAR=%AccTimerMinFloor%:%AccTimerTimeStr2%%AccTimerCDownSec%
-        if (AccTimerTimeStrVAR="0:60") {
+		AccTimerTimeStrVAR=%AccTimerMinFloor%:%AccTimerTimeStr2%%AccTimerCDownSec%
+		GuiConF(GuiNumberTHESEFORLOOPS, 3, AccTimerTimeStrVAR, -1)
+		AccTotalSecMaxIndex:=AccTimerTSec.MaxIndex()
+        if (AccTimerTimeStrVAR="0:00") {
+			sleep, 1000
             GuiConF(GuiNumberTHESEFORLOOPS,2,-1,-1)
 			AltAlarmSound:=1
 			PlaySound:=1
 			SetTimer, AlarmSound, 750
             SetTimer, AlarmSound, on
         }
-        GuiConF(GuiNumberTHESEFORLOOPS, 3, AccTimerTimeStrVAR, -1)
-            AccTotalSecMaxIndex:=AccTimerTSec.MaxIndex()
+
 
             }     
         }        
