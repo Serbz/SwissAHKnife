@@ -207,6 +207,36 @@ IfExist, %A_ScriptDir%\favicon.ico
 
 
 P_WinUMID:=
+ControllerNumber = 0
+;######################## CONTROLLER SETUP #############################
+;Gui, +AlwaysOnTop
+;Gui, Add, Text, w300, Note: For Xbox controller 2013 and newer (anything newer than the Xbox 360 controller), this script can only detect controller events if a window it owns is active (like this one).
+;Gui, Add, Edit, w300 h300 +ReadOnly
+;Gui, Show,, Controller Test Script
+;SetFormat, float, 03  ; Omit decimal point from axis position percentages.
+; Auto-detect the controller number if called for:
+if ControllerNumber <= 0
+{
+	Loop 16  ; Query each controller number to find out which ones exist.
+	{
+		GetKeyState, ContName, %A_Index%JoyName
+		if ContName <>
+		{
+			ControllerNumber = %A_Index%
+			break
+		}
+	}
+	if ControllerNumber <= 0
+	{
+		GuiControl,, Edit1, The system does not appear to have any controllers.
+		return
+	}
+}
+GetKeyState, cont_buttons, %ControllerNumber%JoyButtons
+GetKeyState, cont_name, %ControllerNumber%JoyName
+GetKeyState, cont_info, %ControllerNumber%JoyInfo
+;controller_func(cont_buttons,cont_name,cont_info)
+
 
 ;########################;;########################;;########################;
 ;########################;;######ACC SETUP#########;;########################;
@@ -450,6 +480,9 @@ pwInActive:=False
 T:=
 FBC:=0
 FBC2:=0
+controller_out:=
+O_controller_out:=
+Controller_Window_Focus:=""
 SynActive:=1
 OutputVar3:=0
 OutputVar2:=0
@@ -551,11 +584,9 @@ Gui, %GuiNUmber%: Hide
 ;--------;--------;--------;--------
 
 
-OutlineBuilder("Temp_Syn")
-BuildGUI("Temp_Syn")
 
 
-
+gosub, controller_timer
 
 
 ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
@@ -800,10 +831,15 @@ SetTimer, TimersCheck, on
 SetTimer, ActivateWinUM, 0
 SetTimer, Repaint, off
 SetTimer, ChaosTimer, off
-setTimer, Synergy, 100
-setTimer, Synergy, on
-setTimer, Synergy2, 1000
-setTimer, Synergy2, off
+
+if (ControllerNumber > 0) {
+	SetTimer, controller_timer, 100
+	SetTimer, controller_timer, on
+	ifExist, %A_ScriptDir%\SerbzOSD\Controller_Window_Class.log
+		FileRead, Controller_Window_Focus, %A_ScriptDir%\SerbzOSD\Controller_Window_Class.log
+} else {
+	SetTimer, controller_timer, off
+}
 
 
 
@@ -836,14 +872,6 @@ return
 capslock & esc::reload
 
 
-
-
-
-
-
-
-
-
 CapsLock & d::
 Keywait, d
 WinGetClass, Class, A
@@ -856,10 +884,16 @@ WinActivate, %TitleP%
 }
 Return
 
-;;RButton::Rbutton
-;;MButton::MButton
 
-~MButton & LButton::
+
+
+
+
+
+
+
+;;;; Kept but returned, not using - Good idea though
+~MButton & LButton::return
 send, {MButton up}
 MouseSetVar++
 if (MouseSetVar >= 4)
@@ -869,9 +903,6 @@ if (MouseSetVar >= 4)
 GuiConF(3,3,3String,-1)
 return
 
-capslock & tab::
-soundplay, %A_ScriptDir%\CustomSound\godno.wav
-return
 
 ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
 ;-;-;-;-;-;- Move window LALT + Direction ;-;-;-;-;-;-
@@ -900,14 +931,9 @@ ymult:=y+mult
 winmove, A, , %x%, %ymult% 
 return
 
-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
-;-;-;-;-;-;- get coords idk why
-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
-
 
 
 ;-;-;-;-;-;-
-;-;-;-;-;-;-Capslock & 8::send, %clipboard%
 ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
 ;-;-;-;-;-;-;-;-;-;-;- move window to specific size and coordinates ;-;-;-;-;-;-
 ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
@@ -925,140 +951,7 @@ inx:=RegExReplace(in, ",\s?\,\d+", "")
 winmove, A, , %inx%, %iny%, %inxs%, %inys%
 return
 
-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
-;-;-;-;-;-;-;-;-;-;-;-;- run a regedit to swap notepad default font on open, - for custom 0 for default
-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
-Capslock & 0::
-Run, cmd.exe /c taskkill /f /im Notepad.exe
-Run, cmd.exe /c regedit.exe /S c:\ProgramData\SerbzOSD\reg.reg
-sleep 1500
-run, notepad.exe
-return
-Capslock & -::
-Run, cmd.exe /c taskkill /f /im Notepad.exe
-Run, cmd.exe /c regedit.exe /S c:\ProgramData\SerbzOSD\fuck.reg
-FileSelectFile, txtfileDir
-Run, notepad.exe /W %txtfileDir%
-return
-RALT & RCTRL::
-MonArray:=monitorFunc()
-Height := % MonArray[5]
-Width := % MonArray[6]
-curMonTop := MonArray[1]
-curMonLeft := MonArray[2]
-if (Height != 1080 and Width != 1920) {
-; and curMonTop = 0 and curMonLeft = 0) {
-	;Run, cmd.exe /c %A_ScriptDir%\ChangeScreenResolution.exe /w=1920 /h=1080 /d=1 
-	Run, cmd.exe /c %A_ScriptDir%\ChangeScreenResolution.exe /w=1920 /h=1080 /d=0 
-	;&& Pause
-} else if (curMonTop = 0 and curMonLeft = 0) {
-	;Run, cmd.exe /c %A_ScriptDir%\ChangeScreenResolution.exe /w=2136 /h=1200 /d=1 
-	Run, cmd.exe /c %A_ScriptDir%\ChangeScreenResolution.exe /w=2136 /h=1200 /d=0 
-	;&& Pause
-}
-return
 
-
-~$^lbutton::
-mbfval++
-while mbfval <= 0
-{
-	sleep, 1
-	mbuttonval++
-	}
-if mbfval >= 1 
-{
-	3String = %mbuttonval%, %mbfval%
-	3Time:=40*2
-	GuiConF(3,3,3String,-1)
-	mbfval:=-1
-	mbuttonval:=0
-}
-return
-
-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
-;-;-;-;-;-;- The same thing different? idfk
-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
-capslock & [::
-;check color
-MouseGetPos, MgetX, MgetY
-MgetX2:=MgetX+10
-MgetY2:=MgetY+10
-inputbox, value, CheckColor, Enter a hex value ie. CFBEEF or 654321, , 200, 125, MgetX2, MgetY2
-GuiSpecificColor(3,value)
-decVal := % HexToDec(value)
-3String=Hex: %value% |/-\| Decimal: %decVal%
-3Time:=40*5 ;; 40 = 1 second
-GuiConF(3,3,3String,-1)
-sleep, 5000
-GuiWhiteColor(3)
-return
-
-useless:
-counter:=0
-counter2:=0
-match:=0
-file1Array:=Array()
-
-		3String=Select the file to check for duplicates.
-        3Time:=40*5 ;; 40 = 1 second
-        GuiConF(3,3,3String,-1)
-		sleep, 1000
-FileSelectFile, file1
-		3String=Select the duplicate string list.
-        3Time:=40*2 ;; 40 = 1 second
-        GuiConF(3,3,3String,-1)
-		sleep, 1000
-FileSelectFile, file2
-
-file:=file1
-fileLoad:
-Loop, read, %file%
-{
-		total_lines = %A_Index%
-}
-while (counter < total_lines) {
-	counter++
-	FileReadLine, OutputVar, %file%, %counter%
-	{
-		if (file==file1) {
-			file1Array.insert(OutputVar)
-			3String=[%counter%/%total_lines%] %OutputVar%
-			3Time:=40*2 ;; 40 = 1 second
-			GuiConF(3,3,3String,-1)
-
-		} else {
-			fml = file1Array.maxindex()
-			for key, val in file1Array
-			{
-				if (val==OutputVar) {
-					file1Array.RemoveAt(key)
-					3String=[%key%/%fml%] %OutputVar%
-					3Time:=40*2 ;; 40 = 1 second
-					GuiConF(3,3,3String,-1)
-					break
-				}
-			}
-		}
-		}
-		}
-
-if (file==file1) {
-	file := file2
-	counter:=0
-	goto fileLoad
-}
-file:=""
-for key, val in file1Array
-{
-	file=%file%`n%val%
-}
-filename1:=SubStr(file1, 1, StrLen(file1)-4)
-filename=%filename1%.new
-filename1:=SubStr(file1, StrLen(file1)-4, StrLen(file1)) 
-filename=%filename%%filename1%
-fileAppend, %file%, %filename%
-return
 
 ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
 ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
@@ -1087,31 +980,18 @@ return
 
 ;-;-;-;-;-;- 
 
+
+
 ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
 ;-;-;-;-;-;- MACRO BUILDER STUFF  ;-;-;-;-;-;-;-;-;-;-;-;-
 ;-;-;-;-;-;-;-;-;-;-;-;- Still global keys btw
 ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
 
 
-numpad1::
-if (randomvolasstimervar != 1) {
-	setTimer, RandomVolForAssholes, on
-	
-	randomvolasstimervar := 1
-} else {
-randomvolasstimervar := 0
-setTimer, RandomVolForAssholes, off
-}
+numpad0::run, cmd /k "F:\Tools\Python39\python.exe "E:\GP\PyGAud - PyTIR - TTS\aud.py" && pause && exit"
+numpadDot::run, cmd /k "F:\Tools\Python39\python.exe "E:\GP\PyGAud - PyTIR - TTS\PyTIR\PyTIR.py" && pause && exit"
 return
-;numpadDot::run, cmd /k "F:\Tools\Python39\python.exe" "D:\GP\PyGAud - PyTIR - TTS\PyTIR\PyTIR.bat" && pause && exit"
-numpad0::run, cmd /k "F:\Tools\Python39\python.exe "D:\GP\PyGAud - PyTIR - TTS\aud.py" && pause && exit"
-numpadDot::run, cmd /k "F:\Tools\Python39\python.exe "D:\GP\PyGAud - PyTIR - TTS\PyTIR\PyTIR.py" && pause && exit"
-;run python "E:\God_Proof\Document\AUDIOPROJ\aud.py"
-return
-;numpad1::
-;run, mspaint.exe "D:\Tools\Scripts\PyTIR\test0.png"
-;run, mspaint.exe "D:\Tools\Scripts\PyTIR\test1.png"
-;return
+
 ;-;-;-;-;-;- Clear
 LCTRL & CAPSLOCK::
 keywait CAPSLOCK
@@ -1157,18 +1037,7 @@ if (xmcoordArray.MaxIndex() > 1) {
 		}
 	}
 }
-;clipboard=%clipboard%`n
-;for key, val in xmcoordArray
-;{
-;	clipboard = %clipboard% %key%`, %val%`,
-;	
-;}
-;clipboard=%clipboard%`n
-;for key, val in ymcoordArray
-;{
-;	clipboard = %clipboard% %key%`, %val%`,
-;
-;}
+
 goto macroplay
 ;return
 LCTRL & q::
@@ -1282,165 +1151,8 @@ mdelaycount-=50
 return
 
 
-
-
-
-
-
-;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
-#If MouseSetVar=2 and InitFinish=1 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
-
-
-RButton & Capslock::
-while (getkeystate("Capslock","P")) {
-	sleep, 5
-	if getkeystate("LButton", "P")
-		send, {LButton}
-	gosub markerPlaceOffsetSkip
-}
-return
-
-LALT & LButton::
-MouseGetPos,x,y, itsokay
-wingetpos, x1, y2, w, h, ahk_id %itsokay%
-x3:=x-x2
-y3:=y-y2
-while (getkeystate("LButton","p") and getkeystate("LALT","p")) {
-MouseGetPos, x, y
-x4:=x3-x
-y4:=y4-y
-winmove, ahk_id %itsokay%, , %x4%, %y4%
-}
-
-#If MouseSetVar=3 and InitFinish=1
-coordsText:
-if (counterText = "" or counterText < 0) {
-	counterText := 0
-}
-counterText+=1
-ifExist, %A_ScriptDir%\python310\coordsText.txt
-{
-	fileRead, out, %A_ScriptDir%\python310\coordsText.txt
-	clipboard = %clipboard%`nCoordsText: `n%out%
-	fileDelete, %A_ScriptDir%\python310\coordsText.txt
-	setTimer, coordsText, off
-}
-if (counterText >= 3) {
-	setTimer, coordsText, off
-	counterText := 0
-}
-return
-
-LALT & LButton::
-	ifExist, %A_ScriptDir%\python310\imgread.py
-	{
-		ifExist, %A_ScriptDir%\python310\cards.txt
-		{
-			fileDelete, %A_ScriptDir%\python310\cards.txt
-		}
-		ifExist, %A_ScriptDir%\python310\python.exe
-		{
-			FileSelectFile, cardsDir
-			fileAppend,%cardsDir%, %A_ScriptDir%\python310\cards.txt
-			sleep, 250
-			run, cmd /c %A_ScriptDir%\python310\python.exe %A_ScriptDir%\python310\imgread.py
-			3String = Processing %cardsDir%...
-			3Time:=40*5
-			GuiConF(3,3,3String,-1)
-		}
-
-}
-return
-
-~Ctrl & LButton::
-gosub markerPlace
-coordCalcCounter+=1
-if (coordCalcCounter >= 4 or coordCalcCounter <= 0 or coordCalcCounter = "") {
-	coordCalcCounter := 1
-	clipboard := 
-	gosub markerClear
-	gosub markerPlace
-}
-if (coordCalcCounter = 1) {
-	mousegetpos, ccx1, ccy1
-	coordCalc3string = %ccx1%, %ccy1%
-	clipboard=%A_scriptdir%`n`n%ccx1%, %ccy1%`n.clickc %ccx1% %ccy1%`n`n
-} else if (coordCalcCounter = 2) {
-	mousegetpos, ccx2, ccy2
-	coordCalc3string = %ccx1%, %ccy1% | %ccx2%, %ccy2%
-	mx:=ccx2-ccx1
-	my:=ccy2-ccy1
-	clipboard=%clipboard% `n%ccx1%, %ccy1% | %ccx2%, %ccy2%`ndifferences:x2-x1=%mx% y2-y1=%my%`n.imgread %ccx1%,%ccy1%,%ccx2%,%ccy2%`n`n
-	ifExist, %A_ScriptDir%\python310\imgread.py
-	{
-		ifExist, %A_ScriptDir%\python310\coords.txt
-		{
-			fileDelete, %A_ScriptDir%\python310\coords.txt
-		}
-		ifExist, %A_ScriptDir%\python310\python.exe
-		{
-			fileAppend,%ccx1%`|%ccy1%`|%ccx2%`|%ccy2%, %A_ScriptDir%\python310\coords.txt
-			sleep, 250
-			run, cmd /c start /min %A_ScriptDir%\python310\python.exe %A_ScriptDir%\python310\imgread.py
-		}
-		setTimer, coordsText, 1000
-		setTimer, coordsText, On
-	}
-} else if (coordCalcCounter = 3) {
-	mousegetpos, ccx3, ccy3
-	coordCalc3string = %ccx1%, %ccy1% | %ccx2%, %ccy2% | %ccx3%, %ccy3%
-	x3_1 := % ccx1 + (ccx2 - ccx1)
-	y3_1 := % ccy1 + (ccy2 - ccy1)
-	x3_2 := % ccx2 + (ccx3 - ccx2)
-	y3_2 := % ccy2 + (ccy3 - ccy2)
-	x3_3 := % ccx1 + (ccx3 - ccx1)
-	y3_3 := % ccy1 + (ccy3 - ccy1)
-	mx1:=ccx2-ccx1
-	my1:=ccy2-ccy1
-	mx2:=ccx3-ccx2
-	my2:=ccy3-ccy2
-	mx3:=ccx3-ccx1
-	my3:=ccy3-ccy1
-	clipboard = %clipboard% `n%ccx1%, %ccy1% | %ccx2%, %ccy2% | %ccx3%, %ccy3%`ndifferences:`nx2-x1=%mx1% y2-y1=%my1%`nx3-x2=%mx2% y3-y2=%my2%`nx3-x1=%mx3% y3-y1=%my3%`n
-	clipboard = %clipboard%----`nx`, y `= await coordImg`(ctx,HomeDir `+ r`'`\ImageSearch`\PATHHERE`'`,`"anything`"`)`nx1 `= x `+ `(%x3_1%`)`ny1 `= y `+ `(%y3_1%`)`nx2 `= x `+ `(%x3_2%`)`ny2 `= y `+ `(%y3_2%`)`nreadString `= await readImage`(x1`,y1`,x2`,y2`,False`,`"chrome`"`)
-}
-
-	3String = %coordCalc3string%
-	3Time:=40*5
-	GuiConF(3,3,3String,-1)
-return
-
-
-
-;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
-
-
-
-
-
-;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
-
-
-
-
-;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
-;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
-
-#If (MouseSetVar=1 or MouseSetVar=4) and InitFinish=1 and SynActive = 1
-;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
-;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
-
-
-;ImageSearch, OutputVarX, OutputVarY, X1, Y1, X2, Y2, ImageFile
-
-CTRL & F2::
-;wingetactivestats, title, 2, 3, 4, 5
-WinSet, Transparent, off, A
-return
-CTRL & F1::
-;wingetactivestats, title, 2, 3, 4, 5
-WinSet, Transcolor, 0x010101, A
-return
+;;;;;;;;;;;;;;;;;;;;;;;;CLIPBOARD ARRAY
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AND PASSWORD MANAGER
 
 ^c::
 send, ^c
@@ -1792,43 +1504,8 @@ if (1paste==True)
 	1paste:=False
 return
 
-
-
-;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
-;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
-
-
-;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------
-;;;#If KeysSet = 3 and InitFinish=1 ;-------------------------------------;-------------------------------------;-------------------------------------
-;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------
-
-Ralt & J::
-soundEnter := 1
-;Ralt & L::
-ifNotExist, %A_ScriptDir%\Logins
-	run, cmd.exe /c mkdir %A_ScriptDir%\Logins
-filedelete, %A_ScriptDir%\Logins\wood.log
-;;GroupAdd, GroupName , WinTitle, WinText, Label, ExcludeTitle, ExcludeText
-GroupAdd, RuneliteDW, RuneLite, , , , Serbz, -
-GroupAdd, RuneliteD, RuneLite
-WinGet, RuneliteDWindowCount, Count, ahk_group RuneliteD
-Keywait, RAlt
-superlog :=1
-pwvar :=1
-BlockInput, on
-mousegetpos, m2x, m2y
-mousemove, 960, 540
-Goto superlog1
-
-
-;-------------------------------------
-
-	monstats:
-	monstats:=monitorFunc()
-	monH:=monstats[5]-35
-	monW:=monstats[6]
-    return
-	
+;;;;;;;;;;;;;;;;;;;;; WINDOW MANAGER 
+;;;;;;;;;;;;;;;;;;;;;;;STILL GLOBAL KEYS
 
 	!#1::
 	gosub, monstats
@@ -1836,13 +1513,8 @@ Goto superlog1
 	mousegetpos, xmm, ymm
 	wingetactivestats,t,t,t, x, y
 	MouseMove, x+10, y+10
-	MouseGetPos,,,RuneAcc_UID_T
-	MouseMove, xmm, ymm
-	RuneAcc_UID["SerbzA"] := RuneAcc_UID_T
     WinMove A, , 0, 0, (monW/3), (monH/2)-6
-    if (pwvar=1) {
-        goto A_D_move
-    }
+	MouseMove, xmm, ymm
     return	
 	
 	!#2::
@@ -1851,45 +1523,28 @@ Goto superlog1
 	mousegetpos, xmm, ymm
 	wingetactivestats,t,t,t, x, y
 	MouseMove, x+10, y+10
-	MouseGetPos,,,RuneAcc_UID_T
-	MouseMove, xmm, ymm
-	RuneAcc_UID["SerbzA"] := RuneAcc_UID_T
     WinMove A, , (monW/3), 0, (monW/3), (monH/2)-6
-    if (pwvar=1) {
-        goto A_D_move
-    }
+	MouseMove, xmm, ymm
     return
 	
 	#1::
-    A_move:
 	gosub, monstats
 	sleep, 25
 	mousegetpos, xmm, ymm
 	wingetactivestats,t,t,t, x, y
 	MouseMove, x+10, y+10
-	MouseGetPos,,,RuneAcc_UID_T
-	MouseMove, xmm, ymm
-	RuneAcc_UID["SerbzA"] := RuneAcc_UID_T
     WinMove A, , 0, 0, (monW/2), (monH/2)-6
-    if (pwvar=1) {
-        goto A_D_move
-    }
+	MouseMove, xmm, ymm
     return
  
     #2::
-    B_move:	
 	gosub, monstats
 	sleep, 25
 	mousegetpos, xmm, ymm
 	wingetactivestats,t,t,t, x, y
 	MouseMove, x+10, y+10
-	MouseGetPos,,,RuneAcc_UID_T
-	MouseMove, xmm, ymm
-	RuneAcc_UID["SerbzB"] := RuneAcc_UID_T
     WinMove A, , 0, (monH/2)-6, monW/2, (monH/2)-3
-    if (pwvar=1) {
-        goto B_D_move
-    }
+	MouseMove, xmm, ymm
     return
  
 	#a::
@@ -1898,14 +1553,8 @@ Goto superlog1
 	mousegetpos, xmm, ymm
 	wingetactivestats,t,t,t, x, y
 	MouseMove, x+10, y+10
-	MouseGetPos,,,RuneAcc_UID_T
-	MouseMove, xmm, ymm
-	;;RuneAcc_UID["SerbzE"] := RuneAcc_UID_T
-    ;;WinMove A, , 800, 655, 800, 655 ;;-- Laptop
     WinMove A, , (monW/2), 0, (monW/2), (monH/2)-6
-    if (pwvar=1) {
-        goto E_D_move
-    }
+	MouseMove, xmm, ymm
     return
 	
 	#3::
@@ -1915,14 +1564,8 @@ Goto superlog1
 	mousegetpos, xmm, ymm
 	wingetactivestats,t,t,t, x, y
 	MouseMove, x+10, y+10
-	MouseGetPos,,,RuneAcc_UID_T
-	MouseMove, xmm, ymm
-	;;RuneAcc_UID["SerbzE"] := RuneAcc_UID_T
-    ;;WinMove A, , 800, 655, 800, 655 ;;-- Laptop
     WinMove A, , (monW/2), (monH/2)-6, (monW/2)-10, (monH/2)-3
-    if (pwvar=1) {
-        goto E_D_move
-    }
+	MouseMove, xmm, ymm
     return	
 	
 	#4::
@@ -1931,14 +1574,8 @@ Goto superlog1
 	mousegetpos, xmm, ymm
 	wingetactivestats,t,t,t, x, y
 	MouseMove, x+10, y+10
-	MouseGetPos,,,RuneAcc_UID_T
+	WinMove A, , (monW/2)+10, (monH/2)-6, (monW/2)-10, (monH/2)-3
 	MouseMove, xmm, ymm
-	;;RuneAcc_UID["SerbzE"] := RuneAcc_UID_T
-    ;;WinMove A, , 800, 655, 800, 655 ;;-- Laptop
-    WinMove A, , (monW/2)+10, (monH/2)-6, (monW/2)-10, (monH/2)-3
-    if (pwvar=1) {
-        goto E_D_move
-    }
     return
  
 	#s::
@@ -1947,484 +1584,42 @@ Goto superlog1
 	mousegetpos, xmm, ymm
 	wingetactivestats,t,t,t, x, y
 	MouseMove, x+10, y+10
-	MouseGetPos,,,RuneAcc_UID_T
-	MouseMove, xmm, ymm
-	;;RuneAcc_UID["SerbzE"] := RuneAcc_UID_T
-    ;;WinMove A, , 800, 655, 800, 655 ;;-- Laptop
     WinMove A, , (monW/2), (monH/2)-6, (monW/2), (monH/2)-3
-    if (pwvar=1) {
-        goto E_D_move
-    }
+	MouseMove, xmm, ymm
     return
  
  
-    ;#e::
-    D_move:
-	;gosub, monstats
-	;sleep, 25
-	;mousegetpos, xmm, ymm
-	;wingetactivestats,t,t,t, x, y
-	;MouseMove, x+10, y+10
-	;MouseGetPos,,,RuneAcc_UID_T
-	;MouseMove, xmm, ymm
-	;RuneAcc_UID["SerbzD"] := RuneAcc_UID_T
-    ;;;WinMove A, , 1600, 655, 800, 655 ;;-- Laptop
-    ;WinMove A, , (monW/3)*2, monH/2, monW/3, monH/2
-    ;if (pwvar=1) {
-    ;    goto D_D_move
-    ;}
-    return
- 
+
     #w::
-    E_move:
 	gosub, monstats
 	sleep, 25
 	mousegetpos, xmm, ymm
 	wingetactivestats,t,t,t, x, y
 	MouseMove, x+10, y+10
-	MouseGetPos,,,RuneAcc_UID_T
+	WinMove A, , monW/2, 0, monW/2, monH-9
 	MouseMove, xmm, ymm
-	RuneAcc_UID["SerbzE"] := RuneAcc_UID_T
-    ;;WinMove A, , 800, 655, 800, 655 ;;-- Laptop
-    WinMove A, , monW/2, 0, monW/2, monH-9
-    if (pwvar=1) {
-        goto E_D_move
-    }
     return
     
     
     #q::
-    F_move:
 	gosub, monstats
 	sleep, 25
 	mousegetpos, xmm, ymm
 	wingetactivestats,t,t,t, x, y
 	MouseMove, x+10, y+10
-	MouseGetPos,,,RuneAcc_UID_T
+	WinMove A, , 0, 0, monW/2, monH-9
 	MouseMove, xmm, ymm
-	RuneAcc_UID["SerbzF"] := RuneAcc_UID_T
-    ;;WinMove A, , 0, 655, 800, 655 ;;-- Laptop
-    WinMove A, , 0, 0, monW/2, monH-9
-    if (pwvar=1) {
-        goto F_D_move
-    }
     return
 	
 
-capslock & g::
-runwait, cmd.exe /c net stop synergy
-runwait, cmd.exe /c net start synergy
-return
-;-------------------------------------
-
-#b::
-
-
-    Keywait, LWin
-    Keywait, b
-
-    pwvar:=0
-    superlog:=0
-    sleep 200
-    send, %firstpartuser%
-    sleep 200
-    WinGetActiveTitle, TitleLogin
-    ;#########
-    Input, Outputvar, L1
-        if (Outputvar = "f") {
-            return
-        } else if (Outputvar = "1")  { ;;;; Serbz A
-                Goto, LoginSerbzA
-        } else if (Outputvar = "2")  { ;;;; Serbz B
-                Goto, LoginSerbzB     
-        } else if (Outputvar = "3")  { ;;;; Serbz C
-                Goto, LoginSerbzC
-        } else if (Outputvar = "4")  { ;;;; Serbz D
-                Goto, LoginSerbzD
-        } else if (Outputvar = "5")  { ;;;; Serbz E
-                Goto, LoginSerbzE    
-        } else if (Outputvar = "6")  { ;;;; Serbz F
-                Goto, LoginSerbzF    
-        } else if (Outputvar = "a")  { ;;;; Serbz G
-            send, q@%SerbzChristmas%{TAB}%pw1%
-        } else if (Outputvar = "s")  { ;;;; Serbz H
-            send, w@%SerbzChristmas%{TAB}%pw1%
-        } else if (Outputvar = "q")  { ;;;; Serbz I
-            send, a@%SerbzChristmas%{TAB}%pw1%
-        } else if (Outputvar = "w")  { ;;;; Serbz J
-            send, s@%SerbzChristmas%{TAB}%pw1%
-        } else if (Outputvar = "d")  { ;;;; Serbz KR
-            send, e@%SerbzChristmas%{TAB}%pw2%
-        } else if (Outputvar = "r")  { ;;;; Serbzy
-            send, r@%SerbzChristmas%{TAB}%pw3%
-        } else if (Outputvar = "c")  { ;;;; Serbz N
-            send, c@%SerbzChristmas%{TAB}%pw4%
-        } else if (Outputvar = "v")  { ;;;; Serbz O
-            send, v@%SerbzChristmas%{TAB}%pw5%
-        } else if (Outputvar = "t")  { ;;;; Serbz P
-            send, t@%SerbzChristmas%{TAB}%pw6%
-        } else if (Outputvar = "y")  { ;;;; Serbz Q
-            send, y@%SerbzChristmas%{TAB}%pw7%
-        } else if (Outputvar = "g")  { ;;;; Serbz R
-            send, g@%SerbzChristmas%{TAB}%pw8%
-        } else if (Outputvar = "h")  { ;;;; Serbz S
-            send, h@%SerbzChristmas%{TAB}%pw9%
-        } else if (Outputvar = "b")  { ;;;; Serbz U
-            send, b@%SerbzChristmas%{TAB}%pw10%
-        } else if (Outputvar = "n")  { ;;;; Serbz V
-            send, n@%SerbzChristmas%{TAB}%pw11%
-        } else if (Outputvar = "m")  { ;;;; Serbz W
-            send, m@%SerbzChristmas%{TAB}%pw12%
-        } else if (Outputvar = "j")  { ;;;; Serbz X
-            send, j@%SerbzChristmas%{TAB}%pw13%
-        } else if (Outputvar = "u")  { ;;;; Serbz Y
-            send, u@%SerbzChristmas%{TAB}%pw14%
-        } else if (Outputvar = "i")  { ; Serb Z
-            send, i@%SerbzChristmas%{TAB}%pw15%
-        } else if (Outputvar = "o")  { ; Serb L
-            send, o@%SerbzChristmas%{TAB}%pw15%
-        } else if (Outputvar = "p")  { ; Serb K
-            send, p@%SerbzChristmas%{TAB}%pw15%
-        } else if (Outputvar = "l")  { ; Serb M
-            send, l@%SerbzChristmas%{TAB}%pw15%
-        } else if (Outputvar = "z")  { ; Serbz BTW
-            send, uim1@%SerbzChristmas%
-            sleep 50
-            send, {TAB}%pw16%
-        }
-;}
-return
-;-------------------------------------
-LoginSerbzA:
-if (!IsLogin(0)) {
-		send, 1@%SerbzChristmas%
-		sleep, 100
-		send,{TAB}%SerbzA2%
-		sleep, 100
-        send, {enter}
-}
-if (superlog=1 or pwvar=1)
-    Goto, superlog2
-return
-;#########
-LoginSerbzB:
-
-if (!IsLogin(0)) {
-		send, 2@%SerbzChristmas%
-		sleep, 100
-		send,{TAB}%SerbzB2%
-		sleep, 100
-        send, {enter}
-}
-if (superlog=1 or pwvar=1)
-    Goto, superlog3
-return
-;#########
-LoginSerbzC:
-
-
-if (!IsLogin(0)) {
-		send, 3@%SerbzChristmas%
-		sleep, 100
-		send,{TAB}%SerbzC2%
-		sleep, 100
-        send, {enter}
-}
-if (superlog=1 or pwvar=1) 
-    Goto, superlog4
-return
-;#########
-LoginSerbzD:
-
-
-if (!IsLogin(0)) { 
-
-		send, 4@%SerbzChristmas%
-		sleep, 100
-		send,{TAB}%SerbzD2%
-		sleep, 100
-        send, {enter}
-}
-if (superlog=1 or pwvar=1) 
-    Goto, superlog5
-return
-;#########
-LoginSerbzE:
-
-
-if (!IsLogin(0)) { 
-
-		send, 5@%SerbzChristmas%
-		sleep, 100
-		send, {TAB}%SerbzE2%
-		sleep, 100
-        send, {enter}
-}
-if (superlog=1 or pwvar=1)
-    Goto, superlog6
-return
-;#########
-LoginSerbzF:
-
-
-if (!IsLogin(0)) {  
-
-		send, 6@%SerbzChristmas%
-		sleep, 100
-		send, {TAB}%SerbzF2%
-		sleep, 100
-        send, {enter}
-    soundEnter=0
-    soundplay, %A_ScriptDir%\CustomSound\Star Wars Episode II - The Clones at Kamino.wav
-}
-if (superlog=1 or pwvar=1)
-    goto, superlogfin
-return
-
-
-superlog1:
-groupActivate, RuneliteD, r
-sleep 258
-Winset, Style, -0xC00000, A
-goto A_move
-A_D_move:
-
-sleep 29
-if (pwvar=1) {
-sleep 250
-send, {tab}{enter}
-sleep 150
-send, %firstpartuser%
-goto, LoginSerbzA
-}
-sleep 28
-;#########
-
-superlog2:
-groupActivate, RuneliteD, r
-sleep 258
-Winset, Style, -0xC00000, A
-goto B_move
-B_D_move:
-if (!IsLogin(0))
-Goto superlog3
-sleep 29
-if (pwvar=1) {
-sleep 250
-send, {tab}{enter}
-sleep 150
-send, %firstpartuser%
-goto, LoginSerbzB
-}
-sleep 28
-;#########
-
-superlog3:
-groupActivate, RuneliteD, r
-sleep 258
-Winset, Style, -0xC00000, A
-goto C_move
-C_D_move:
-if (!IsLogin(0))
-Goto superlog4
-sleep 29
-if (pwvar=1) {
-sleep 250
-send, {tab}{enter}
-sleep 150
-send, %firstpartuser%
-
-
-goto, LoginSerbzC
-}
-sleep 28
-;#########
-
-
-
-
-superlog4:
-groupActivate, RuneliteD, r
-sleep 258
-Winset, Style, -0xC00000, A
-goto D_move
-D_D_move:
-if (!IsLogin(0))
-Goto superlog5
-sleep 29
-if (pwvar=1) {
-sleep 250
-send, {tab}{enter}
-sleep 150
-send, %firstpartuser%
-goto, LoginSerbzD
-}
-sleep 28
-;#########
-
-superlog5:
-groupActivate, RuneliteD, r
-sleep 258
-Winset, Style, -0xC00000, A
-goto E_move
-E_D_move:
-if (!IsLogin(0))
-Goto superlog6
-sleep 29
-if (pwvar=1) {
-sleep 250
-send, {tab}{enter}
-sleep 150
-send, %firstpartuser%
-goto, LoginSerbzE
-}
-sleep 200
-;#########
-
-superlog6:
-groupActivate, RuneliteD, r
-sleep 258
-Winset, Style, -0xC00000, A
-goto F_move
-F_D_move:
-if (!IsLogin(0)) {
-BlockInput, off
+	monstats:
+	monstats:=monitorFunc()
+	monH:=monstats[5]-35
+	monW:=monstats[6]
     return
-}
-sleep 29
-if (pwvar=1) {
-sleep 250
-send, {tab}{enter}
-sleep 150
-send, %firstpartuser%
-goto, LoginSerbzF
-}
-superlogfin:
-pwvar :=0
-superlog:=0
+;-------------------------------------
 
 
-BlockInput, off
-mousemove, m2x, m2y
-
-goto, pinsgotothing
-
-return
-
-capslock & numpad7::
-pinsgotothing:
-Pin2Use:=""
-PinNum2Use:=""
-winauthRunning := 0
-counter := 0
-file=%A_scriptdir%\tasklist.txt
-ifExist, %file%
-	fileDelete, %file%
-run, cmd.exe /c tasklist >> %file%
-sleep, 250	
-Loop, read, %file%
-{
-		total_lines = %A_Index%
-}
-
-while (counter < total_lines) {
-	counter++
-	FileReadLine, OutputVar, %file%, %counter%
-	{											;.+?\.exe\s+[0-9]+\s?\w+\s+[0-9]\s+[0-9]+\,?[0-9]+\s?\w?
-		OutputVar2 := RegExReplace(OutputVar, "(.+?)((\.exe)|\s)+[0-9]+\s?\w+\s+[0-9]\s+[0-9]+\,?[0-9]+\s?\w?","$1")
-		if (OutputVar2 == "WinAuth") { 
-			winauthRunning := 1
-			3String=WinAuth is running.
-			3Time:=40*2 ;; 40 = 1 second
-			GuiConF(3,3,3String,-1)
-			break
-		}
-	}
-	
-}
-if (winauthRunning == 0) {
-goto skipwinauthrunning
-	ifExist, %drive1%:\Tools\WinAuth\WinAuth.exe
-	{
-		run, cmd.exe /c start %drive1%:\Tools\WinAuth\WinAuth.exe
-		3String=Launched WinAuth
-		3Time:=40*2 ;; 40 = 1 second
-		GuiConF(3,3,3String,-1)
-
-		sleep, 500
-		wingetactivetitle, title
-
-		while (title != "WinAuth") { 
-			wingetactivetitle, title
-			sleep, 100
-		}
-			ifExist, %pwDirVar%WinAuth.txt
-		{
-			fileRead, varvar, %pwDirVar%WinAuth.txt
-			wingetactivestats, title, w, h, x, y
-			if (title = "WinAuth" and w = 420 and h = 180) {
-				mousemove, x+92, y+107
-				sleep, 20
-				click
-				sleep, 350
-				sendRaw, %varvar%
-				varvar:=
-				sleep, 350
-				mousemove, x+337, y+109
-				sleep, 20
-				click
-				sleep, 150
-				send, {alt}{tab}
-			}
-		}
-	}
-}
-skipwinauthrunning:
-counter := 0
-
-while (counter <= 6) {
-counter++
-groupActivate, RuneliteD, r
-if (IsLogin(1)) { 
-counter2 := 0
-	;WinGetActiveTitle, Title
-	mousegetpos, xmm, ymm
-	wingetactivestats,t,t,t, x, y
-	MouseMove, x+10, y+10
-	MouseGetPos,,,RuneAcc_UID_T
-	mousemove, xmm, ymm
-	for key, val in RuneAcc_UID
-	{
-	counter2++
-		if (val == RuneAcc_UID_T) {
-			3String=%key% - %val% - %counter2%
-			3Time:=40*1 ;; 40 = 1 second
-			GuiConF(3,3,3String,-1)
-			send, {ALT Down}
-			sleep, 50
-			send, %counter2%
-			sleep, 50
-			send, {Alt Up}
-			sleep, 400
-			send, ^v
-			sleep, 150
-			send, {tab}{enter}
-			break
-		}
-	}
-} else {
-	
-}
-}
-
-
-
-
-;msgbox, % PinNum2Use
-;msgbox, % Pin2Use
-
-;;;;;;;;;;;;;;;;;;;; HERE IS WHERE YOU ARE
-return
 
 ;-------------------------------------
                         ;;782, 1741 ~~1560,2390  782+783= 661+1741=2402
@@ -3222,7 +2417,7 @@ if (TimerIsRunning=0 and TimerIsPaused=0) {
 	GTMDiff:=GlobalTimerMinutes-floor(GlobalTimerMinutes)
     GlobalTotalSeconds:=GlobalTimerMinutes*60
     GlobalSecondsDisplayInit:=GlobalTotalSeconds-1
-    GlobalSecondDisplay:=60
+    GlobalSecondDisplay:=round((GTMDiff*60),0)-1
     TimerIsRunning:=1
     TimerIsPaused:=0
     TimerResetWarning:=0
@@ -3317,13 +2512,20 @@ return
 #If KeysSet=2 and InitFinish=1
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
-
+capslock & g::
+WinGetClass,Controller_Window_Focus,A
+3String=Controller will activate ahk_class %Controller_Window_Focus%
+3Time:=40*2 ;; 40 = 1 second
+GuiConF(3,3,3String,-1)
+FileDelete, %A_ScriptDir%\SerbzOSD\Controller_Window_Class.log
+FileAppend, %Controller_Window_Focus%, %A_ScriptDir%\SerbzOSD\Controller_Window_Class.log
+return
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
 Capslock & u::  ;;;;;;    <--- This is to toggle on/off the automatic window focus of runelite under the cursor
 Keywait, u
     FileDelete, %A_ScriptDir%\SerbzOSD\ActiveToggle.log
     FileAppend, %ActiveToggle%, %A_ScriptDir%\SerbzOSD\ActiveToggle.log
-            3String=No longer activating windows under cursor
+		3String=No longer activating windows under cursor
         3Time:=40*2 ;; 40 = 1 second
         GuiConF(3,3,3String,-1)
 if (ActiveToggle=1) {
@@ -3403,9 +2605,11 @@ for GuiKeyCheck, GuiValueCheck in GuiActiveArray {
 return
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
 Capslock & R:: ;;save or move to saved positions
-WinGet, RuneliteWindowCount, Count, ahk_group Runelite
+;WinGet, RuneliteWindowCount, Count, ahk_group Runelite
+;msgbox, % RuneliteWindowCount
 GroupAdd, RuneliteD, RuneLite - 
 WinGet, RuneliteDWindowCount, Count, ahk_group RuneliteD
+;msgbox, % RuneliteDWindowCount
 WindowPosSetCounter:=0
 moveWins:=0
 MsgboxMove_String=Move or Save
@@ -3413,43 +2617,63 @@ ChangeBtnNames:=1
 Btn1_Name=Move ; YES
 Btn2_Name=Save ; ELSE
 SetTimer, MsgboxMove, on
-MsgBox, 4, %MsgboxMove_String%, Would you like to Move to your saved window positions, or save the current window positions?
+MsgBox, 4, %MsgboxMove_String%, Would you like to Move to your saved Runelite positions, or save the current Runelite positions?
 ifMsgBox, YES
 {
 moveWins:=1
-} 
+}
+setTimer, ActivateWinUM, off
+blockinput, on
 while (WindowPosSetCounter<=RuneliteDWindowCount) {
-	WindowPosSetCounter++
 	GroupActivate, RuneliteD, r
+	;sleep, 25
 	WinGetActiveStats, yTitle, ywWidth, ywHeight, yWX, yWY
+	;ifInString, "Runelite - ", yTitle
+	WindowPosSetCounter++
 	;msgbox, % yTitle
 	If (moveWins=1) {
 		ifExist, %A_ScriptDir%\SerbzOSD\_%yTitle%_Settings.log
 		{
 				;SaveyTitle=%yTitle%
 			fileRead, settingsString2, %A_ScriptDir%\SerbzOSD\_%yTitle%_Settings.log
+			;sleep, 25
 			settingsObject2 := StrSplit(settingsString2, "|")
 			WinMove A, , % settingsObject2[1], % settingsObject2[2], % settingsObject2[3], % settingsObject2[4]
+			;sleep, 25
 		}
 	} else { 
+			SaveString=%yWX%|%yWY%|%ywWidth%|%ywHeight%
 			ifExist, %A_ScriptDir%\SerbzOSD\_%yTitle%_Settings.log
 		{
-			fileRead, settingsString, %A_ScriptDir%\SerbzOSD\_%yTitle%_Settings.log
-			settingsObject := StrSplit(settingsString, "|")
-			if (( yWX!=settingsObject[1] or yWY!=settingsObject[2] or ywWidth!=settingsObject[3] or ywHeight!=settingsObject[4] )) {
-				SaveString=%yWX%|%yWY%|%ywWidth%|%ywHeight%
-				;SaveyTitle=%yTitle%
+		;	fileRead, settingsString, %A_ScriptDir%\SerbzOSD\_%yTitle%_Settings.log
+		;	settingsObject := StrSplit(settingsString, "|")
+		;	if (( yWX!=settingsObject[1] or yWY!=settingsObject[2] or ywWidth!=settingsObject[3] or ywHeight!=settingsObject[4] )) {
+		;		;SaveyTitle=%yTitle%
 				fileDelete, %A_ScriptDir%\SerbzOSD\_%yTitle%_Settings.log
-				fileAppend, %SaveString%, %A_ScriptDir%\SerbzOSD\_%yTitle%_Settings.log
+				;sleep, 25
+		;		sleep, 50
+		;		fileAppend, %SaveString%, %A_ScriptDir%\SerbzOSD\_%yTitle%_Settings.log
 			}
-		} else {
-		if (yTitle!="Runelite") {
+		;} else {
+		;if (yTitle!="Runelite") {
 			fileAppend, %SaveString%, %A_ScriptDir%\SerbzOSD\_%yTitle%_Settings.log
-		}
+		;}
 		
-		}
+		;}
 	}
 }
+blockinput, off
+    ifExist %A_ScriptDir%\SerbzOSD\ActiveToggle.log
+    {
+    fileRead, ActiveToggle, %A_ScriptDir%\SerbzOSD\ActiveToggle.log
+        if (ActiveToggle=1) {
+        ActiveToggle:=0
+        SetTimer, ActivateWinUM, off
+        } else {
+        ActiveToggle:=1
+        SetTimer, ActivateWinUM, on
+        }
+    }
 return
 
 
@@ -3946,7 +3170,7 @@ return
 ;-------------------;-------------------;-------------------;
 ;subhere
 SetTimer_Minutes:
-        if (GlobalSecondsDisplayInit<=0 or timerMessage=TIME) {
+        if (GlobalSecondsDisplayInit<=0 or TimerTimeStr="TIME") {
                 SetTimer, UpdateOSD2, off
                 GlobalSecondDisplay:=60
                 MouseGetPos, MgetX, MgetY
@@ -4335,75 +3559,104 @@ Even(n)
 }
 
 
+controller_func(cont_buttons,cont_name,cont_info){
+	buttons_down =
+	Loop, %cont_buttons%
+	{
+		GetKeyState, Cont%A_Index%, %ControllerNumber%Joy%A_Index%
+		if Cont%A_Index% = D
+			buttons_down = %buttons_down%%A_Space%%A_Index%
+	}
+	GetKeyState, ContX, %ControllerNumber%JoyX
+	ContX:=round(ContX,0)
+	axis_info = X%ContX%
+	GetKeyState, ContY, %ControllerNumber%JoyY
+	ContY:=round(ContY,0)
+	axis_info = %axis_info%%A_Space%%A_Space%Y%ContY%
+	IfInString, cont_info, Z
+	{
+		GetKeyState, ContZ, %ControllerNumber%JoyZ
+		ContZ:=round(ContZ,0)
+		axis_info = %axis_info%%A_Space%%A_Space%Z%ContZ%
+	}
+	IfInString, cont_info, R
+	{
+		GetKeyState, ContR, %ControllerNumber%JoyR
+		ContR:=round(ContR,0)
+		axis_info = %axis_info%%A_Space%%A_Space%R%ContR%
+	}
+	IfInString, cont_info, U
+	{
+		GetKeyState, ContU, %ControllerNumber%JoyU
+		ContU:=round(ContU,0)
+		axis_info = %axis_info%%A_Space%%A_Space%U%ContU%
+	}
+	IfInString, cont_info, V
+	{
+		GetKeyState, ContV, %ControllerNumber%JoyV
+		ContV:=round(ContV,0)
+		axis_info = %axis_info%%A_Space%%A_Space%V%ContV%
+	}
+	IfInString, cont_info, P
+	{
+		GetKeyState, ContPOV, %ControllerNumber%JoyPOV
+		ContPOV:=round(ContPOV,0)
+		axis_info = %axis_info%%A_Space%%A_Space%POV%ContPOV%
+	}
+	;GuiControl,, Edit1, %cont_name% (#%ControllerNumber%):`n%axis_info%`nButtons Down: %buttons_down%
+	out = %cont_name% %ControllerNumber% %axis_info% - %buttons_down%
+	;3Time:=40*2
+	;GuiConF(3,3,3String,-1)
+	;msgbox, %cont_name% %ControllerNumber% %axis_info% %buttons_down%
+return out
+}
+
 ;-------;-------------------;-------------------;    
 ;-----------------;-------------------;-------------------;
 ;--------------Timers---------------;-------------------;-------------------;
 ;--------------------------------------;-------------------;
-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
-Synergy:
-MouseGetPos, ThreeX, ThreeY
-winGetClass, synClass, A
-if (CurDisplayCX=ThreeX and CurDisplayCY=ThreeY and synClass="SynergyDesk") {
-		SynActive := 0
-		DebugPriority:=3
-		
-		if (SynX <= 0 or !SynX)
-			SynX := 1
-		if (SynY <= 0 or !SynY)
-			SynY := 1
-		if (SynCounter < 1 or !SynCounter)
-			SynCounter := % Rand(1,2)
-		if (SynCounter2 < 1 or !SynCounter2)
-			SynCounter2 := % Rand(1,2)
-		
-		MonArray:=monitorFunc()
-		CurDisplayW:=MonArray[6]
-		CurDisplayH:=MonArray[5]
-		CurDisplayY:=MonArray[1]
-		CurDisplayX:=MonArray[2]
+;;;;;;;;;;;;;;;;;;; Controller
 
-		MMHeight := % MonArray[5]
-		MMWidth := % MonArray[6]
-		CurDisplayCY := % floor(CurDisplayH/2)
-		CurDisplayCX := % floor(CurDisplayW/2)
-		
-		Gui, 3: Default
-		GuiControl, +cCFBEEF, MyText
-		3String:="Synergy Took Cursor" 
-		;;;%CurDisplayCX%=%ThreeX% %CurDisplayCY%=%ThreeX%
-		3Time:=40*3 ;; 40 = 1 second
-		GuiConF("Temp_Syn",3,3String,-1)
-		sleep, 750
-		SetTimer, Synergy2, 500
-		SetTimer, Synergy2, on
-		SetTimer, Synergy, off
-}
-return
+controller_timer:
+	;3String = %cont_buttons% %cont_name% %cont_info%
+	;3Time:=40*2
+	;GuiConF(3,3,3String,-1)
+	;sleep, 1000
+	
+	O_controller_out := controller_out
+	controller_out := % controller_func(cont_buttons,cont_name,cont_info)
+	controller_out_btn := substr(controller_out, strlen(controller_out), 1)
+	;3String = %controller_out_btn% - %controller_out%
+	;3Time:=40*2
+	;GuiConF(3,3,3String,-1)
+	if (O_controller_out != controller_out and InitFinish==1 and Controller_Window_Focus!="") {
+		WinGetClass,CClass,A
+		if (CClass != Controller_Window_Focus and Controller_Window_Focus != "Shell_TrayWnd"){
+			;O_CClass := CClass
+			WinActivate, ahk_class %Controller_Window_Focus%
+			;mousegetpos, x, y
+			;mousemove, x+1, y+1
+			;3String = sanity
+			;3Time:=40*2
+			;GuiConF(3,3,3String,-1)
+		} ;else if (CClass == ahk_class Controller_Window_Focus and controller_out_btn == 8) {
+		;	WinActivate, ahk_class O_CClass
+		;	3String = Unfocusing %Controller_Window_Focus% - Game Paused
+		;	3Time:=40*2
+		;	GuiConF(3,3,3String,-1)
+		;}	
+	} else if (Controller_Window_Focus="" and InitFinish==1 and O_controller_out != controller_out) {
+		3String = There is no window set to focus on controller activation. Use CAPS + G.
+		3Time:=40*2
+		GuiConF(3,3,3String,-1)
+	}
+	sleep, 100
+	return
+
+
+
+
 ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
-Synergy2:
-	winGetClass, synClass, A
-	suspend, on
-		if (CurDisplayCX!=ThreeX and CurDisplayCY!=ThreeY and synClass!="SynergyDesk") {
-			SynActive := 1
-			Gui, 3: Default
-			GuiControl, +cLIME, MyText
-			3String=Cursor Returned
-			3Time:=40*2 ;; 40 = 1 second
-			GuiConF(3,3,3String,-1)			;tooltip, %ThreeX% %ThreeY% %synCount% %3Time% %CurDisplayCX% %CurDisplayCY%
-			GuiWhiteColor(3)
-			DebugPriority:=0
-			suspend, off
-			SetTimer, Synergy, on
-			SetTimer, Synergy2, off
-			return
-		}
-	
-	GuiRandColor("Temp_Syn")
-	3String:="Serbz"
-	;3Time:=3800 ;; 40 = 1 second
-	GuiConF("Temp_Syn",3,3String,-1)
-	
-return
 
 
 ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
@@ -4450,8 +3703,9 @@ return
 ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
 ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
 Three:
-;critical
-MouseGetPos, ThreeX, ThreeY
+critical
+if(stopThreeGo!=1)
+	MouseGetPos, ThreeX, ThreeY
 
 	;if(GlobalMouseCounter>=1){
 	;	GlobalMCX:=ThreeX+20
@@ -4459,56 +3713,37 @@ MouseGetPos, ThreeX, ThreeY
 	;	GuiConf(3,1, GlobalMCX, GlobalMCY) 
 	;}
     if (GUI2ActiveMouse=1 and GlobalTotalSeconds and TimerIsRunning=1) {
-    if(stopThreeGo!=1)
-                MgetX2:=ThreeX+10
-                MgetY2:=ThreeY - 7
-                GuiConF(2,1, MgetX2, MgetY2)            
+		if(stopThreeGo!=1) {
+					MgetX2:=ThreeX+10
+					MgetY2:=ThreeY - 7
+		}					
+		GuiConF(2,1, MgetX2, MgetY2) 
     } else if (!GlobalTotalSeconds) {
             GuiConF(2,2,-1,-1)
     }
 ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
     if (3Time>=0 and MouseMessages!=0) {
-    if(stopThreeGo!=1)
-        MouseGetPos, ThreeX, ThreeY
+    ;if(stopThreeGo!=1)
+    ;    MouseGetPos, ThreeX, ThreeY
         
-        if ((CurDisplayCY!=ThreeY and CurDisplayCX!=ThreeX) and (3String!="Synergy Took Cursor" or 3String!="Serbz")) { 
+        if ((CurDisplayCY!=ThreeY and CurDisplayCX!=ThreeX)) { ; REMOVING and (3String!="Synergy Took Cursor" and 3String!="Serbz")) { 
 			3Time--
 				if(3Time>=1)
 					GuiConF(3,1,ThreeX-10,ThreeY+50)
 				else
-					GuiConF(3,2,-1,-1)				
-				GuiConF("Temp_Syn",2,-1,-1)
-			} else {
-				3Time:=0
-            if (SynCounter>=(CurDisplayW/2)-150) {
-                SynDirection:=Rand(-1.5,-0.5)
-            } else if (SynCounter<=-(CurDisplayW/2)+50) {
-                SynDirection:=Rand(0.5,1.5)
-            }
-            if (SynCounter2>=(CurDisplayH/2)-20) {
-                SynDirection2:=% Rand(-1.5,-0.5)
-            } else if (SynCounter2<=-(CurDisplayH/2)+15) {
-                SynDirection2:= % Rand(0.5,1.5)
-            }
-            SynCounter:=SynCounter+(SynDirection*Rand(3,7))
-            SynCounter2:=SynCounter2+SynDirection2
-            SynX:=floor((CurDisplayW/2)+SynCounter)-60+CurDisplayX
-            SynY:=floor((CurDisplayH/2)-SynCounter2)-25+CurDisplayY
-			GuiConF("Temp_Syn",1,SynX,SynY)
-			
-				;msgbox, %SynTickY% %SynTickX%
-			}	
+					GuiConF(3,2,-1,-1)
+			}
+
         } else {
             GuiConF(3,2,-1,-1)
             capsp_press:=0
         }
     
 ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
-;if (tickHUD=1) { ; and tickLimit!=NaN) {
 if (tickHUD==1 and tickDisplaySetting==1) {
 	;msgbox, here
-    if(stopThreeGo!=1)
-        MouseGetPos, ThreeX, ThreeY
+    ;if(stopThreeGo!=1)
+    ;    MouseGetPos, ThreeX, ThreeY
         if (tickDisplaySetting==1) {
 			4ThreeX:=ThreeX-78
 			4ThreeY:=ThreeY-50
@@ -4547,7 +3782,6 @@ if (tickHUD==1 and tickDisplaySetting==1) {
     r:=100
     dir:=1
     4ThreeX:=(ThreeX+r*cos(((ThreeSinCosCounter-1)/(2*r*3.1416))))-73
-    ;4ThreeX:=(ThreeX+r*-cos(((ThreeSinCosCounter-1)/(2*r*3.1416))))-73
     4ThreeY:=(ThreeY+dir*r*sin(((ThreeSinCosCounter-1)/(2*r*3.1416))))-10
     if (initTick>=1)
         GuiConF(4,1,4ThreeX,4ThreeY)
@@ -4561,11 +3795,11 @@ if (tickHUD==1 and tickDisplaySetting==1) {
 ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;--;-;-
 if (Debug=1) {    
     if(stopThreeGo!=1) {
-        MouseGetPos, ThreeX, ThreeY
+        ;MouseGetPos, ThreeX, ThreeY
         5ThreeX:=ThreeX-275
         5ThreeY:=ThreeY-50
-        GuiConF(5,1,5ThreeX-150,5ThreeY)
 		}
+        GuiConF(5,1,5ThreeX-150,5ThreeY)
 }
 ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
 if ((GUI2ActiveMouse=0 and 3Time<0 and tickHUD=0 and Debug=0 and GlobalMouseCounter==0)) {
@@ -4649,9 +3883,10 @@ if(GlobalSecondsDisplayInit<=0 and GlobalSecondsDisplayInit!=-1){
                         
                         if (colorswap=0) {
                             colorswap:=1
-                                if(PlaySound=0) { 
+                                if(PlaySound=0) {
+								
                                 PlaySound=1
-                                SetTimer, AlarmSound, 4000
+								SetTimer, AlarmSound, 4000
                                 SetTimer, AlarmSound, on
                             }
                             GuiControl, +cRED, MyText
