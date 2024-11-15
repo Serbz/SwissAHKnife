@@ -28,11 +28,12 @@
 ;;;            A - Disable/enable a window under the cursor
 ;;;            T - Disable/enable a single window that is focused (non runelite, very handy to use on the desktop, so accidentally right *FORBIDDEN_WORD*ing (c1ick) it is not possible)
 ;;;            Q - Set a window to be always ontop or not
-;;;            R - Save runelite window locations or move to saved runelite window locations
+;;;            R - Save RUNELITE window locations or move to saved runelite window locations
+;;;					SET HOTKEY FOR RUNELITE TOOLBAR TO F12
 ;;;            D - Bring firefox/chrome into focus
 ;;;            W - Bring window opacity down
 ;;;            E - Reset window opacity to 255 (opaque)
-;;;        
+;;;        	   G - Sets window to be focused one controller input, if set to windows shell (taskbar) it will be ignored
 ;;;        
 ;;;        GLOBAL KEYS
 ;;;        Capslock alone - Cycles through runelite window focus, priority on next account window if active else search for empty runelite (not logged in)
@@ -223,13 +224,13 @@ if ControllerNumber <= 0
 		if ContName <>
 		{
 			ControllerNumber = %A_Index%
+			SplashTextOn ,200 ,25 , Controller Info,ControllerNumber = %A_Index%
 			break
 		}
 	}
 	if ControllerNumber <= 0
 	{
-		GuiControl,, Edit1, The system does not appear to have any controllers.
-		return
+		SplashTextOn ,200 ,25 , Controller Info, No controller detected
 	}
 }
 GetKeyState, cont_buttons, %ControllerNumber%JoyButtons
@@ -282,30 +283,7 @@ while (AccCounter<NumAccs) {
         }
     }
 } 
-;NumAccsCorrection:
-;NumAccCounter:=NumAccs
-;while (NotExistCorrection=0) {
-;    NumAccCounter++
-;    ifNotExist %A_ScriptDir%\SerbzOSD\Account%NumAccCounter%.log
-;    {
-;        NotExistCorrection=1
-;        NumAccCounter:=NumAccCounter-NotExistCorrection
-;        break
-;    }
-;}
-;while (NumAccs<=NumAccCounter) { 
-;    NumAccs++
-;    ifExist %A_ScriptDir%\SerbzOSD\Account%NumAccs%.log
-;        {
-;            FileRead, AccTempAdd, %A_ScriptDir%\SerbzOSD\Account%NumAccs%.log
-;            Account.Insert(AccTempAdd)
-;        } else {
-;            NumAccs--
-;            break
-;        }
-;    }
-;} 
-;            
+        
 IfExist %A_ScriptDir%\SerbzOSD\NumAccs.log
     FileDelete, %A_ScriptDir%\SerbzOSD\NumAccs.log
 FileAppend, %NumAccs%, %A_ScriptDir%\SerbzOSD\NumAccs.log
@@ -843,7 +821,7 @@ if (ControllerNumber > 0) {
 
 
 
-
+			SplashTextOff
 			3String=Initialization Finish.
 			3Time:=40*1 ;; 40 = 1 second
 			GuiConF(3,3,3String,-1)
@@ -2604,9 +2582,8 @@ for GuiKeyCheck, GuiValueCheck in GuiActiveArray {
 }
 return
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
-Capslock & R:: ;;save or move to saved positions
-;WinGet, RuneliteWindowCount, Count, ahk_group Runelite
-;msgbox, % RuneliteWindowCount
+;;;;;;;save or move to saved positions;;;;;;;;
+Capslock & R:: 
 GroupAdd, RuneliteD, RuneLite - 
 WinGet, RuneliteDWindowCount, Count, ahk_group RuneliteD
 ;msgbox, % RuneliteDWindowCount
@@ -2623,46 +2600,32 @@ ifMsgBox, YES
 moveWins:=1
 }
 setTimer, ActivateWinUM, off
-blockinput, on
 while (WindowPosSetCounter<=RuneliteDWindowCount) {
 	GroupActivate, RuneliteD, r
-	;sleep, 25
 	WinGetActiveStats, yTitle, ywWidth, ywHeight, yWX, yWY
-	;ifInString, "Runelite - ", yTitle
 	WindowPosSetCounter++
-	;msgbox, % yTitle
 	If (moveWins=1) {
 		ifExist, %A_ScriptDir%\SerbzOSD\_%yTitle%_Settings.log
 		{
-				;SaveyTitle=%yTitle%
 			fileRead, settingsString2, %A_ScriptDir%\SerbzOSD\_%yTitle%_Settings.log
-			;sleep, 25
 			settingsObject2 := StrSplit(settingsString2, "|")
+			WinSet, Style, -0xC00000, A
+			send, {f12}
+			sleep, 100
+			send, {f12}
+			sleep, 100
 			WinMove A, , % settingsObject2[1], % settingsObject2[2], % settingsObject2[3], % settingsObject2[4]
-			;sleep, 25
+			
 		}
 	} else { 
 			SaveString=%yWX%|%yWY%|%ywWidth%|%ywHeight%
 			ifExist, %A_ScriptDir%\SerbzOSD\_%yTitle%_Settings.log
 		{
-		;	fileRead, settingsString, %A_ScriptDir%\SerbzOSD\_%yTitle%_Settings.log
-		;	settingsObject := StrSplit(settingsString, "|")
-		;	if (( yWX!=settingsObject[1] or yWY!=settingsObject[2] or ywWidth!=settingsObject[3] or ywHeight!=settingsObject[4] )) {
-		;		;SaveyTitle=%yTitle%
 				fileDelete, %A_ScriptDir%\SerbzOSD\_%yTitle%_Settings.log
-				;sleep, 25
-		;		sleep, 50
-		;		fileAppend, %SaveString%, %A_ScriptDir%\SerbzOSD\_%yTitle%_Settings.log
 			}
-		;} else {
-		;if (yTitle!="Runelite") {
 			fileAppend, %SaveString%, %A_ScriptDir%\SerbzOSD\_%yTitle%_Settings.log
-		;}
-		
-		;}
 	}
 }
-blockinput, off
     ifExist %A_ScriptDir%\SerbzOSD\ActiveToggle.log
     {
     fileRead, ActiveToggle, %A_ScriptDir%\SerbzOSD\ActiveToggle.log
@@ -2707,6 +2670,8 @@ WinGet, curtrans, Transparent, A
 if (!curtrans)
     curtrans = 255
 newtrans := curtrans + 16
+if (newtrans>255)
+	newtrans:=255
 if (newtrans>0) {
     WinSet, Transparent, %newtrans%, A
     3String=Window %aTitle5% Opacity Increased %newtrans%.
@@ -3672,7 +3637,7 @@ if (Debug=1) {
 				sleep, 1250
 				DebugCycle++
 				if (DebugCycle = 1)
-					5String=SynX=%SynX% SynY=%SynY% C1=%SynCounter% C2=%SynCounter2% BD1=%SynDirection% BD2=%SynDirection2% CX=%CurDisplayCX% CY=%CurDisplayCY%
+					5String=CX=%CurDisplayCX% CY=%CurDisplayCY%
 				else if (DebugCycle >= 2) {
 					DebugCycle:=0
 					5String=3Time=%3Time% 3String=%3String%
