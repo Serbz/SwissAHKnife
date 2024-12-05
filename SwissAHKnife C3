@@ -165,10 +165,9 @@
 ;;;Finally have proper timer sounds that don't force the whole thread to pause.
     ;; The global timer will now audibly alert you.
 
-;#MaxThreadsPerHotkey 999
+
 #MaxThreads 999
 #MaxThreadsPerHotkey 99
-;;;#HotkeyInterval 500 ; This is the default value (milliseconds).
 #MaxHotkeysPerInterval 999
 #MaxThreadsBuffer On
 #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
@@ -182,7 +181,7 @@ StringCaseSense, off
 DetectHiddenWindows, on
 SetBatchLines, -1
 CoordMode, Mouse, Screen
-;;Hotkey, LCTRL & RCTRL, , T99
+
 SetMouseDelay, 0
 SetKeyDelay, 0
 SetWinDelay, 0
@@ -196,7 +195,19 @@ GroupAdd, RuneliteD, RuneLite
 ;   ExitApp
 ;}
 
-
+ifNotExist, C:\Windows\Fonts\OCR_A_STD_REGULAR.ttf
+{
+	;run, cmd.exe /c copy %A_ScriptDir%\OCR A Std Regular\OCR A Std Regular.ttf C:\Windows\Fonts\OCR_A_STD_REGULAR.ttf
+	run, cmd.exe /c echo. REGEDIT4 >> %A_ScriptDir%\Fonts\Font.reg
+	run, cmd.exe /c echo. \[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts\] >> %A_ScriptDir%\Fonts\Font.reg
+	run, cmd.exe /c echo. "OCRAStd"="OCR_A_STD_REGULAR" >> %A_ScriptDir%\Fonts\Font.reg
+	run, cmd.exe /c copy %A_ScriptDir%\Fonts\OCR_A_STD_REGULAR.ttf C:\Windows\Fonts\
+	run, cmd.exe /c reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts" /v "OCRAStd (TrueType)" /t REG_SZ /d OCR_A_STD_REGULAR.ttf /f
+	run, cmd.exe /c "HKLM\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion\Fonts" /v "OCRAStd (TrueType)" /t REG_SZ /d OCR_A_STD_REGULAR.ttf /f
+	sleep, 1000
+	filedelete, %A_ScriptDir%\Fonts\Font.reg
+	gosub caps_y
+}
 Run, cmd.exe /c mkdir %A_ScriptDir%\SerbzOSD\
 
 CS=%A_ScriptDir%\SerbzOSD\
@@ -208,31 +219,11 @@ IfExist, %A_ScriptDir%\favicon.ico
 
 
 P_WinUMID:=
-ControllerNumber = 0
 ;######################## CONTROLLER SETUP #############################
-;Gui, +AlwaysOnTop
-;Gui, Add, Text, w300, Note: For Xbox controller 2013 and newer (anything newer than the Xbox 360 controller), this script can only detect controller events if a window it owns is active (like this one).
-;Gui, Add, Edit, w300 h300 +ReadOnly
-;Gui, Show,, Controller Test Script
-;SetFormat, float, 03  ; Omit decimal point from axis position percentages.
-; Auto-detect the controller number if called for:
-if ControllerNumber <= 0
-{
-	Loop 16  ; Query each controller number to find out which ones exist.
-	{
-		GetKeyState, ContName, %A_Index%JoyName
-		if ContName <>
-		{
-			ControllerNumber = %A_Index%
-			SplashTextOn ,200 ,25 , Controller Info,ControllerNumber = %A_Index%
-			break
-		}
-	}
-	if ControllerNumber <= 0
-	{
-		SplashTextOn ,200 ,25 , Controller Info, No controller detected
-	}
-}
+
+ContName:=""
+ControllerNumber:=0
+gosub, controllerCheck
 GetKeyState, cont_buttons, %ControllerNumber%JoyButtons
 GetKeyState, cont_name, %ControllerNumber%JoyName
 GetKeyState, cont_info, %ControllerNumber%JoyInfo
@@ -243,23 +234,12 @@ GetKeyState, cont_info, %ControllerNumber%JoyInfo
 ;########################;;######ACC SETUP#########;;########################;
 ;########################;;########################;;########################;
 NoRLDir:=0
-NoAHKVars:=0
 RuneLiteDir:=
 MsgboxMove_String:=
 SetTimer, MsgboxMove, 250
 SetTimer, MsgboxMove, off
 
-ifExist, %A_ScriptDir%\SerbzOSD\AHKDirectory.log
-{ 
-fileRead, AHKDirectory, %A_ScriptDir%\SerbzOSD\AHKDirectory.log
-ifExist, E:\rsahkvars
-    FileMoveDir, E:\rsahkvars, %AHKDirectory%, R
-CS=%AHKDirectory% ;; CS=C:\rsahkvars ;; - LAPTOP
-ifNotExist, %A_ScriptDir%\SerbzOSD\pwfilelist.txt
-    NoAHKVars:=1
-} else {
-NoAHKVars:=1
-}
+
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;;-;-;-;-;-;-;-;-
 ;-;-;-;-;-;-; Number of accounts, and account names ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;;-;-;-;-;-;-;-;-
@@ -433,6 +413,7 @@ MgetX5T:=0
 3String=
 OutlineCounter:=0
 offset1:=0
+controller_check_var:=0
 offset2:=0
 TockTockTickText:=
 TickTockTickTock:=0
@@ -557,7 +538,7 @@ while (GuiNumber<5) {
 GuiNumber++
 OutlineBuilder(GuiNumber)
 BuildGUI(GuiNumber)
-Gui, %GuiNUmber%: Hide
+Gui, %GuiNumber%: Hide
 }
 ;--------;--------;--------;--------
 
@@ -718,80 +699,15 @@ ifExist %A_ScriptDir%\SerbzOSD\GlobalSecondDisplay.log
 ;-;-;-;-;-;-; Password Manager -;-;-;-;-;-;-;-;-;-;-
 ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
 pwlimit:=0
-drive1g:=""
-drive2g:=""
-drive1:=
-drive2:=
-pwDirVar:=
-alphalist := Array()
-alphalist := ["a","b","c","d","e","f","q","m","n","","o","p","r","s","t","u","h","i","v","w","x","z","j","k","G","l"]
-numlist := Array()
-numlist := ["8","9","7","6","5","4","3","2","1","0"]
-countera = 0
-for key, drivetest in alphalist
-{
-
-	ifexist, %drivetest%:\Tools\wget\bin\wget.exe
-	{
-		drive1:= % drivetest
-		drive1g:=True
-	}
-	ifexist, %drivetest%:\Old Folder\wrinkly_file.txt
-	{
-		drive2:= % drivetest
-		drive2g:=True
-	}
-	if (drive2g != "" and drive1g != "")
-		break
-
-}
-;-;-;-;-;-;- should replace this directory with something globally use-able if the flash drive doesn't exist - drive1
-ifexist, %drive1%:\Tools\Scripts\Private-AHK-Variables\
-{
-
-	CS=%drive1%:\tools\Scripts\Private-AHK-Variables\
-	NoAHKVars:=0
-	pwDirVar=%drive1%:\Tools\Scripts\Private-AHK-Variables\PWs\
-	ifExist, %A_ScriptDir%\SerbzOSD\pwfilelist.txt
-	{
-		fileDelete, %A_ScriptDir%\SerbzOSD\pwfilelist.txt
-		sleep, 500
-	}
-	Run, cmd.exe /c dir /b %pwDirVar% >>  %A_ScriptDir%\SerbzOSD\pwfilelist.txt
-	sleep, 1000
-	pwlimit := pwFunc("help me")
-} else { 
-
-csr:=substr(A_ScriptDir, 1, StrLen(A_ScriptDir)-12)
-
-
-ifexist, %csr%
-	{
-	csr.="\Private-AHK-Variables\"
-	CS=%csr%
-	NoAHKVars:=0
-	pwDirVar=%A_ScriptDir%\SerbzOSD\PWs\
-	ifExist, %A_ScriptDir%\SerbzOSD\pwfilelist.txt
-	{
-		fileDelete, %A_ScriptDir%\SerbzOSD\pwfilelist.txt
-		sleep, 500
-	}
-	Run, cmd.exe /c dir /b %pwDirVar% >>  %A_ScriptDir%\SerbzOSD\pwfilelist.txt
-	sleep, 1000
-	pwlimit := pwFunc("help me")
-
-	}  else {
-	NoAHKVars:=1
-
-	}
-}
-CS:=OCS
+pwDirVar=%A_ScriptDir%\SerbzOSD\PWs\
+pwlimit := pwFunc()
+;msgbox, % pwlimit
 ctrlCVar:=0
 1paste:=False
 coordCounter:=-1
 Fkey := True
 ;-;-;-;-;-;-
-SetTimer , RandomVolForAssholes, 1000
+SetTimer , RandomVolForAssholes, 1100
 SetTimer , RandomVolForAssholes, off
 SetTimer, UpdateOSD, 100
 SetTimer, UpdateOSD, on
@@ -801,7 +717,7 @@ SetTimer, SaveWait, 5000
 SetTimer, SaveWait, off
 SetTimer, AccTimers, 100
 SetTimer, AccTimers, off
-SetTimer, Three, 25
+SetTimer, Three, 27
 SetTimer, Three, off
 SetTimer, 1fuckingsecondtimer, on
 SetTimer, TimersCheck, 500
@@ -811,7 +727,7 @@ SetTimer, Repaint, off
 SetTimer, ChaosTimer, off
 
 if (ControllerNumber > 0) {
-	SetTimer, controller_timer, 100
+	SetTimer, controller_timer, 300
 	SetTimer, controller_timer, on
 	ifExist, %A_ScriptDir%\SerbzOSD\Controller_Window_Class.log
 		FileRead, Controller_Window_Focus, %A_ScriptDir%\SerbzOSD\Controller_Window_Class.log
@@ -825,7 +741,7 @@ if (ControllerNumber > 0) {
 			3String=Initialization Finish.
 			3Time:=40*1 ;; 40 = 1 second
 			GuiConF(3,3,3String,-1)
-			InitFinish:=1
+			InitFinish:=1 
 ;msgbox, %CurDisplayCY%, %CurDisplayCX%
 
 
@@ -881,6 +797,15 @@ if (MouseSetVar >= 4)
 GuiConF(3,3,3String,-1)
 return
 
+;f9::
+;var := clipboard
+;loop, parse, var
+;{
+;	send,{%A_LoopField%}
+;	sleep, 3
+;}
+;send, %clipboard%
+;return
 
 ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
 ;-;-;-;-;-;- Move window LALT + Direction ;-;-;-;-;-;-
@@ -895,9 +820,9 @@ wingetactivestats, title, w, h, x, y
 xmult:=x+mult
 winmove, A, , %xmult%, %y% 
 return
-xbutton2::sendInput, {wheelup}
+;xbutton2::sendInput, {wheelup}
 ;-;-;-;-;-;-
-xbutton1::sendInput, {wheeldown}
+;xbutton1::sendInput, {wheeldown}
 LALT & Up::
 mult:=-3
 goto mvwin3
@@ -966,8 +891,14 @@ return
 ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
 
 
-numpad0::run, cmd /k "F:\Tools\Python39\python.exe "E:\GP\PyGAud - PyTIR - TTS\aud.py" && pause && exit"
-numpadDot::run, cmd /k "F:\Tools\Python39\python.exe "E:\GP\PyGAud - PyTIR - TTS\PyTIR\PyTIR.py" && pause && exit"
+
+f8::
+	wingetactivetitle, title
+	run, cmd /c start /min cmd /k  "F:\Tools\Python39\python.exe "%A_ScriptDir%\Scripts\pyper-clip_minecraft.py" && pause && exit"
+	winactivate, %title%
+return
+f9::run, cmd /k "F:\Tools\Python39\python.exe "E:\GP\PyGAud - PyTIR - TTS\aud.py" && pause && exit"
+f10::run, cmd /k "F:\Tools\Python39\python.exe "E:\GP\PyGAud - PyTIR - TTS\PyTIR\PyTIR.py" && pause && exit"
 return
 
 ;-;-;-;-;-;- Clear
@@ -1304,7 +1235,7 @@ newpwgenbox:
 return
 
 pwOpt:
-pwlimit:=pwFunc(0)
+pwlimit:=pwFunc()
 file:=""
 pw:=""
 label:=""
@@ -1337,7 +1268,7 @@ if (pwchcrVar <= pwFileList.maxIndex()) {
 			gosub, backuppw
 			sleep, 100
 			if (deleteYesOpt = True) {
-				pwlimit:=pwFunc(0)
+				pwlimit:=pwFunc()
 				3String= DELETED - %file%
 				3Time:=40*3 ;; 40 = 1 second
 				GuiConF(3,3,3String,-1)
@@ -1383,7 +1314,7 @@ if (file=="" and deleteYesOpt = False) {
 	fileAppend, %newPW%, %pwDirVar%%pwname%.txt
 
 
-	pwlimit:=pwFunc(0)
+	pwlimit:=pwFunc()
 } 
 if (deleteYesOpt = True) {
 	3String=Password #%pwchcrVar% not found.
@@ -1392,25 +1323,26 @@ if (deleteYesOpt = True) {
 }
 setTimer, pwOpt, off
 return
-pwFunc(var) {
+pwFunc() {
 global pwFileList
 global CS
 global pwDirVar
-	FileDelete, %A_ScriptDir%\SerbzOSD\pwfilelist.txt
+	
+	FileDelete, %A_ScriptDir%\SerbzOSD\pwlist.txt
 	sleep, 500
-	Run, cmd.exe /c dir /b %pwDirVar% >>  %A_ScriptDir%\SerbzOSD\pwfilelist.txt
+	Run, cmd.exe /c dir /b %pwDirVar% >>  %A_ScriptDir%\SerbzOSD\pwlist.txt
 	sleep, 500
 	counter:=1
 	pwFileList:=[]
 
-	Loop, read, %A_ScriptDir%\SerbzOSD\pwfilelist.txt
+	Loop, read, %A_ScriptDir%\SerbzOSD\pwlist.txt
 	{
 			total_lines3 = %A_Index%
 	}
-
+	;msgbox, % total_lines3
 	while (counter < total_lines3) {
 		counter++
-		FileReadLine, OutputVar, %A_ScriptDir%\SerbzOSD\pwfilelist.txt, counter
+		FileReadLine, OutputVar, %A_ScriptDir%\SerbzOSD\pwlist.txt, counter
 		{
 			if (OutputVar != "" and OutputVar != "backups") {
 				pwFileList.insert(OutputVar)
@@ -1424,7 +1356,7 @@ global pwDirVar
 
 
 
-#If NoAHKVars = 0 and InitFinish=1 and SynActive = 1
+#If InitFinish=1 and SynActive = 1
 
 #LALT::
 keywait, LALT
@@ -2491,12 +2423,25 @@ return
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
 capslock & g::
-WinGetClass,Controller_Window_Focus,A
-3String=Controller will activate ahk_class %Controller_Window_Focus%
-3Time:=40*2 ;; 40 = 1 second
-GuiConF(3,3,3String,-1)
-FileDelete, %A_ScriptDir%\SerbzOSD\Controller_Window_Class.log
-FileAppend, %Controller_Window_Focus%, %A_ScriptDir%\SerbzOSD\Controller_Window_Class.log
+ContName:=""
+ControllerNumber:=0
+controller_check_var:=1
+gosub, controllerCheck
+if (controller_check_var==2) {
+	controller_check_var:=0
+	return
+}
+controller_check_var:=0
+	WinGetClass,Controller_Window_Focus,A
+	if (Controller_Window_Focus!="Shell_TrayWnd") {
+		3String=Controller will activate ahk_class %Controller_Window_Focus%
+	} else {
+		3String=Controller activation window focusing disabled.
+	}
+	3Time:=40*2 ;; 40 = 1 second
+	GuiConF(3,3,3String,-1)
+	FileDelete, %A_ScriptDir%\SerbzOSD\Controller_Window_Class.log
+	FileAppend, %Controller_Window_Focus%, %A_ScriptDir%\SerbzOSD\Controller_Window_Class.log
 return
 ;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;-------------------------------------;
 Capslock & u::  ;;;;;;    <--- This is to toggle on/off the automatic window focus of runelite under the cursor
@@ -3173,7 +3118,7 @@ SetTimer, UpdateOSD2, off
 TimerIsRunning:=0
 TimerIsPaused:=0
 TimerResetWarning=0
-GlobalSecondsDisplayInit:=GlobalTotalSeconds
+GlobalSecondsDisplayInit:=0
 GlobalSecondsInitMin:=
 GlobalTimerMinR:=
 GlobalSecondDisplay:=
@@ -3581,7 +3526,35 @@ return out
 ;--------------Timers---------------;-------------------;-------------------;
 ;--------------------------------------;-------------------;
 ;;;;;;;;;;;;;;;;;;; Controller
-
+controllerCheck:
+ControllerNumber:=0
+if ControllerNumber <= 0
+{
+	Loop 16  ; Query each controller number to find out which ones exist.
+	{
+		GetKeyState, ContName, %A_Index%JoyName
+		if ContName <>
+		{
+			ControllerNumber = %A_Index%
+			;if (InitFinish != 1) {
+			;	SplashTextOn ,200 ,25 , Controller Info,ControllerNumber = %A_Index%
+			;}
+			break
+		}
+	}
+	if ControllerNumber <= 0
+	{
+		if (InitFinish != 1) {
+			SplashTextOn ,200 ,25 , Controller Info, No controller detected
+		} else {
+			3String=No controller found!
+			3Time:=40*1 ;; 40 = 1 second
+			GuiConF(3,3,3String,-1)
+			controller_check_var:=2
+		}
+	}
+}
+return
 controller_timer:
 	;3String = %cont_buttons% %cont_name% %cont_info%
 	;3Time:=40*2
@@ -3667,8 +3640,14 @@ if (Debug=1) {
 return
 ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
 ;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
+;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-;-
 Three:
-critical
+;critical
 if(stopThreeGo!=1)
 	MouseGetPos, ThreeX, ThreeY
 
