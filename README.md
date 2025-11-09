@@ -4,7 +4,7 @@ desktop and window management, various toolsets, HUD
 
 ;  Usage:  (required AHK v1.1.31+)
 
-     Space - CHANGES THE KEY MODE !!! - Three modes, OSD, Window Management
+     Capslock + Space - CHANGES THE KEY MODE !!! - Three modes, OSD, Window Management
      
      OSD MODE KEYS: (KeySet=1)
          CAPSLOCK + 
