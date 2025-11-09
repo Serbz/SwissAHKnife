@@ -3,47 +3,47 @@ desktop and window management, various toolsets, HUD
 *opt* some runelite functions for painting OSD names, assisting with window focus and placement geared towards people playing multiple accounts
 
 ;  Usage:  (required AHK v1.1.31+)
-;;;
-;;;     Space - CHANGES THE KEY MODE !!! - Three modes, OSD, Window Management
-;;;     
-;;;     OSD MODE KEYS: (KeySet=1)
-;;;         CAPSLOCK + 
-;;;         F - Changes the Capslock + Left/Right Mouse button and C key modes (Markers, Magnifiers, Counters, Notes)
-;;;         X - Creates a tick counter, offers options if active to change style, remove the counter, or change the tick count limit.
-;;;         Z - Offers options for hiding, sticking cursor objects (messages/timers/etc) and nameplates
-;;;         E - Sets either the Account Specific countdown timer start time or the same for the Global Timer.
-;;;         W - Pauses/Unpauses the global timer
-;;;         T - Creates or removes an account specific timer
-;;;         Q - Creates or removes the Global Timer
-;;;         3 - Either counts the account specific counter up, or clears it - These are attached to nameplates, if nameplates are hidden these are too.
-;;;         Up, Down, Left, Right - Move the nameplates and attached displays on the runelite windows, these locations are saved.
-;;;     
-;;;     
-;;;     WINDOW MANAGEMENT KEYS: (KeySet=2)
-;;;         CAPSLOCK + 
-;;;         G - Sets window to be focused one controller input, if set to windows shell (taskbar) it will be ignored
-;;;         U - Toggles on/off the automatic window focus of runelite under the cursor
-;;;         3 - Disable/enable a window under the cursor
-;;;         Q - Set a window to be always ontop or not
-;;;         R - Save RUNELITE window locations or move to saved runelite window locations
-;;;         W - Bring window opacity down
-;;;         E - Reset window opacity to 255 (opaque)
-;;;           C - Toggles the window's border and title bar
-;;;
-;;;
-;;;     GLOBAL KEYS
-;;;         Capslock alone - Cycles through runelite window focus, priority on next account window if active else search for empty runelite (not logged in)
-;;;         CAPSLOCK + 
-;;;         D - Bring firefox/chrome into focus
-;;;         Y - Reloads the script
-;;;         B - Clears script settings, either all or all non-account settings    
-;;;         N - Kills all runelite windows without warning
-;;;         H - Kills the window, any window, even explorer, that is under the cursor without warning.
-;(DISABLED) ;         A - Hides a window off screen, press again to bring it back
-;;;         4 - Makes the window under the cursor bounce around the screen, Capslock+5 to stop all bouncing windows.
-;;;         V - Toggles Debug OSD
-;;;         
-;;;
+
+     Space - CHANGES THE KEY MODE !!! - Three modes, OSD, Window Management
+     
+     OSD MODE KEYS: (KeySet=1)
+         CAPSLOCK + 
+         F - Changes the Capslock + Left/Right Mouse button and C key modes (Markers, Magnifiers, Counters, Notes)
+         X - Creates a tick counter, offers options if active to change style, remove the counter, or change the tick count limit.
+         Z - Offers options for hiding, sticking cursor objects (messages/timers/etc) and nameplates
+         E - Sets either the Account Specific countdown timer start time or the same for the Global Timer.
+         W - Pauses/Unpauses the global timer
+         T - Creates or removes an account specific timer
+         Q - Creates or removes the Global Timer
+         3 - Either counts the account specific counter up, or clears it - These are attached to nameplates, if nameplates are hidden these are too.
+         Up, Down, Left, Right - Move the nameplates and attached displays on the runelite windows, these locations are saved.
+     
+     
+     WINDOW MANAGEMENT KEYS: (KeySet=2)
+         CAPSLOCK + 
+         G - Sets window to be focused one controller input, if set to windows shell (taskbar) it will be ignored
+         U - Toggles on/off the automatic window focus of runelite under the cursor
+         3 - Disable/enable a window under the cursor
+         Q - Set a window to be always ontop or not
+         R - Save RUNELITE window locations or move to saved runelite window locations
+         W - Bring window opacity down
+         E - Reset window opacity to 255 (opaque)
+           C - Toggles the window's border and title bar
+
+
+     GLOBAL KEYS
+         Capslock alone - Cycles through runelite window focus, priority on next account window if active else search for empty runelite (not logged in)
+         CAPSLOCK + 
+         D - Bring firefox/chrome into focus
+         Y - Reloads the script
+         B - Clears script settings, either all or all non-account settings    
+         N - Kills all runelite windows without warning
+         H - Kills the window, any window, even explorer, that is under the cursor without warning.
+        (DISABLED) A - Hides a window off screen, press again to bring it back
+         4 - Makes the window under the cursor bounce around the screen, Capslock+5 to stop all bouncing windows.
+         V - Toggles Debug OSD
+         
+
   
 
 -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
